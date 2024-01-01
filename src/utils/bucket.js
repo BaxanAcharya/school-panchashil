@@ -10,17 +10,13 @@ const bucket = cloudinary;
 const uplaodOnBucket = async (filePath) => {
   try {
     if (!filePath) return null;
-    bucket.uploader.upload(
-      filePath,
-      {
-        resource_type: "auto",
-      },
-      (error, result) => {
-        if (error) return null;
-        return result;
-      }
-    );
+    const fileRepose = await bucket.uploader.upload(filePath, {
+      resource_type: "auto",
+    });
+    fs.unlinkSync(filePath);
+    return fileRepose.secure_url;
   } catch (error) {
+    console.log("error", error);
     fs.unlinkSync(filePath);
     return null;
   }

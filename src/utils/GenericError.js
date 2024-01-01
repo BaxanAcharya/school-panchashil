@@ -5,7 +5,7 @@ class GenericError extends Error {
     errors = [],
     errorStack = ""
   ) {
-    super(message);
+    super();
     this.statusCode = statusCode;
     this.data = null;
     this.message = message;

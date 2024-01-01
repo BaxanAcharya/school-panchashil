@@ -1,3 +1,4 @@
+import bcrypt from "bcrypt";
 import mongoose from "mongoose";
 const adminSchema = new mongoose.Schema(
   {
@@ -8,6 +9,7 @@ const adminSchema = new mongoose.Schema(
     },
     email: {
       type: String,
+      lowercase: true,
       required: true,
       unique: true,
       trim: true,
@@ -28,20 +30,20 @@ const adminSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-adminSchema.pre("save", async (next) => {
+adminSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
   this.password = await bcrypt.hash(this.password, 10);
   next();
 });
-adminSchema.methods.isPasswordCorrect = async (password) => {
+adminSchema.methods.isPasswordCorrect = async function (password) {
   return await bcrypt.compare(password, this.password);
 };
-adminSchema.methods.generateRefreshToken = async () => {
+adminSchema.methods.generateRefreshToken = async function () {
   return await jwt.sign({ _id: this._id }, process.env.REFRESH_TOKEN_SECRET, {
     expiresIn: process.env.REFRESH_TOKEN_EXPIRY,
   });
 };
-adminSchema.methods.generateAccessToken = async () => {
+adminSchema.methods.generateAccessToken = async function () {
   return await jwt.sign(
     { _id: this._id, email: this.email, fullName: this.fullName },
     process.env.ACCESS_TOKEN_SECRET,

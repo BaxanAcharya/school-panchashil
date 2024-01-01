@@ -1,7 +1,7 @@
 import multer from "multer";
 
 const storage = multer.diskStorage({
-  destination: (_, _, cb) => {
+  destination: (_, __, cb) => {
     cb(null, "public/temp");
   },
   filename: (_, file, cb) => {

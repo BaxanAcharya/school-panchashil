@@ -6,3 +6,5 @@ class GenericReponse {
     this.success = status < 400;
   }
 }
+
+export { GenericReponse };
