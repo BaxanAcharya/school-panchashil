@@ -8,3 +8,4 @@ export const COOKIE_OPTIONS = {
 export const ACCESS_TOKEN = "accessToken";
 export const REFRESH_TOKEN = "refreshToken";
 export const PASSWORD = "password";
+export const SECTION_LIST = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"];
