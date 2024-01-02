@@ -9,3 +9,4 @@ export const ACCESS_TOKEN = "accessToken";
 export const REFRESH_TOKEN = "refreshToken";
 export const PASSWORD = "password";
 export const SECTION_LIST = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"];
+export const GENDER_LIST = ["Male", "Female", "Other"];

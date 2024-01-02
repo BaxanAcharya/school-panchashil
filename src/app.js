@@ -4,6 +4,7 @@ import express from "express";
 import { API_PREFIX, PARSER_LIMIT } from "./constant.js";
 import adminRouter from "./routes/admin.route.js";
 import classRouter from "./routes/class.router.js";
+import studentRouter from "./routes/student.router.js";
 
 const app = express();
 app.use(
@@ -25,5 +26,6 @@ app.use(cookieParser());
 
 app.use(`${API_PREFIX}/admin`, adminRouter);
 app.use(`${API_PREFIX}/class`, classRouter);
+app.use(`${API_PREFIX}/student`, studentRouter);
 
 export { app };

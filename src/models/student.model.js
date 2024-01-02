@@ -1,4 +1,7 @@
 import mongoose from "mongoose";
+import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2";
+import { GENDER_LIST } from "../constant.js";
+
 const studentSchema = new mongoose.Schema(
   {
     fullName: {
@@ -6,104 +9,74 @@ const studentSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-  },
-  {
     fatherName: {
       type: String,
       required: true,
       trim: true,
     },
-  },
-  {
     motherName: {
       type: String,
       required: true,
       trim: true,
     },
-  },
-
-  {
     rollNumber: {
       type: Number,
       required: true,
     },
-  },
-
-  {
     dateOfBirth: {
       type: Date,
       required: true,
     },
-  },
-  {
     admissionDate: {
       type: Date,
       required: true,
     },
-  },
-  {
     gender: {
       type: String,
-      enum: ["Male", "Female", "Other"],
+      enum: GENDER_LIST,
       required: true,
     },
-  },
-  {
     previousSchool: {
       type: String,
       required: false,
       trim: true,
     },
-  },
-  {
     physicalDisability: {
-      type: Boolean,
+      type: String,
       required: false,
       trim: true,
     },
-  },
-  {
     gaurdianFullName: {
       type: String,
       required: true,
       trim: true,
     },
-  },
-  {
     gaurdianAddress: {
       type: String,
       required: true,
       trim: true,
     },
-  },
-  {
     gaurdianContactNumber: {
       type: Number,
       required: true,
     },
-  },
-  {
     gaurdianProfession: {
       type: String,
       required: true,
       trim: true,
     },
-  },
-
-  {
     transportationType: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Transportation",
     },
-  },
-  {
     class: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Class",
     },
   },
-
   { timestamps: true }
 );
+
+studentSchema.plugin(mongooseAggregatePaginate);
 
 export const Student = mongoose.model("Student", studentSchema);
