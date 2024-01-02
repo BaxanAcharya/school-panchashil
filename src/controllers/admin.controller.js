@@ -130,7 +130,7 @@ const loginAdmin = handleAsync(async (req, res) => {
     );
 });
 
-const logoutUser = handleAsync(async (req, res) => {
+const logoutAdmin = handleAsync(async (req, res) => {
   const admin = await Admin.findByIdAndUpdate(
     req?.admin,
     {
@@ -147,4 +147,4 @@ const logoutUser = handleAsync(async (req, res) => {
     .json(new GenericReponse(200, "User Logged Out", {}));
 });
 
-export { addAdmin, loginAdmin, logoutUser };
+export { addAdmin, loginAdmin, logoutAdmin };

@@ -2,12 +2,12 @@ import { Router } from "express";
 import {
   addAdmin,
   loginAdmin,
-  logoutUser,
+  logoutAdmin,
 } from "../controllers/admin.controller.js";
 import { verifyJWT } from "../middleware/auth.middleware.js";
 import { upload } from "../middleware/multer.middleware.js";
 const router = Router();
 router.route("/register").post(upload.single("thumbnail"), addAdmin);
 router.route("/login").post(loginAdmin);
-router.route("/logout").post(verifyJWT, logoutUser);
+router.route("/logout").post(verifyJWT, logoutAdmin);
 export default router;
