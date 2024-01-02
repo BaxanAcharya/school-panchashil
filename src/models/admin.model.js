@@ -1,4 +1,5 @@
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 const adminSchema = new mongoose.Schema(
   {
