@@ -15,6 +15,12 @@ const validateEmail = (email) => {
   }
 };
 
+const validateOldPassword = (oldPassword) => {
+  if (!oldPassword) {
+    return "Please provide old password.";
+  }
+};
+
 const validatePassword = (password, checkStrong = false) => {
   if (!password) {
     return "Please provide a password.";
@@ -26,4 +32,9 @@ const validatePassword = (password, checkStrong = false) => {
   }
 };
 
-export { validateEmail, validateFullName, validatePassword };
+export {
+  validateEmail,
+  validateFullName,
+  validateOldPassword,
+  validatePassword,
+};
