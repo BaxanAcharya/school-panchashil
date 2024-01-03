@@ -4,6 +4,7 @@ import express from "express";
 import { API_PREFIX, PARSER_LIMIT } from "./constant.js";
 import adminRouter from "./routes/admin.route.js";
 import classRouter from "./routes/class.router.js";
+import examRouter from "./routes/exam.route.js";
 import feeRouter from "./routes/fee.route.js";
 import studentRouter from "./routes/student.router.js";
 import subjectRouter from "./routes/subject.route.js";
@@ -23,7 +24,6 @@ app.use(
   })
 );
 app.use(express.static("public"));
-
 app.use(cookieParser());
 
 app.use(`${API_PREFIX}/admin`, adminRouter);
@@ -31,5 +31,5 @@ app.use(`${API_PREFIX}/class`, classRouter);
 app.use(`${API_PREFIX}/student`, studentRouter);
 app.use(`${API_PREFIX}/subject`, subjectRouter);
 app.use(`${API_PREFIX}/fee`, feeRouter);
-
+app.use(`${API_PREFIX}/exam`, examRouter);
 export { app };
