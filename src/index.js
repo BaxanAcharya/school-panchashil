@@ -1,6 +1,8 @@
 import env from "dotenv";
+import events from "events";
 import { app } from "./app.js";
 import connectDB from "./db/index.js";
+events.EventEmitter.defaultMaxListeners = 15;
 
 env.config({
   path: "./env",

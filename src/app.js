@@ -4,6 +4,7 @@ import express from "express";
 import { API_PREFIX, PARSER_LIMIT } from "./constant.js";
 import adminRouter from "./routes/admin.route.js";
 import classRouter from "./routes/class.router.js";
+import feeRouter from "./routes/fee.route.js";
 import studentRouter from "./routes/student.router.js";
 import subjectRouter from "./routes/subject.route.js";
 
@@ -29,5 +30,6 @@ app.use(`${API_PREFIX}/admin`, adminRouter);
 app.use(`${API_PREFIX}/class`, classRouter);
 app.use(`${API_PREFIX}/student`, studentRouter);
 app.use(`${API_PREFIX}/subject`, subjectRouter);
+app.use(`${API_PREFIX}/fee`, feeRouter);
 
 export { app };

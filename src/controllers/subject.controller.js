@@ -76,7 +76,7 @@ const addSubject = handleAsync(async (req, res) => {
     .json(new GenericReponse(201, "Subject created successfully ", subject));
 });
 
-const getSubjects = handleAsync(async (req, res) => {
+const getSubjects = handleAsync(async (_, res) => {
   const subjects = await Subject.aggregate([
     {
       $lookup: {
@@ -264,6 +264,23 @@ const updateSubjectById = handleAsync(async (req, res) => {
   const isClass = await Class.findById(classId);
   if (!isClass) {
     return res.status(400).json(new GenericError(404, "Class Not Found."));
+  }
+
+  const isSubject = await Subject.findOne({
+    name: name.toUpperCase(),
+    class: classId,
+  });
+  if (isSubject) {
+    return res
+      .status(400)
+      .json(
+        new GenericError(
+          409,
+          `Subject ${name.toUpperCase()} already exists for class ${
+            isClass.name
+          }.`
+        )
+      );
   }
 
   const updatedSubject = await Subject.findByIdAndUpdate(
