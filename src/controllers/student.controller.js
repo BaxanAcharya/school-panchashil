@@ -232,28 +232,28 @@ const updateStudentById = handleAsync(async (req, res) => {
   const updatedStudent = await Student.findByIdAndUpdate(
     id,
     {
-      fullName,
-      fatherName,
-      motherName,
-      rollNumber,
-      dateOfBirth,
-      admissionDate,
-      gender,
-      previousSchool,
-      physicalDisability,
-      gaurdianFullName,
-      gaurdianAddress,
-      gaurdianContactNumber,
-      gaurdianProfession,
-      class: classId,
+      $set: {
+        fullName,
+        fatherName,
+        motherName,
+        rollNumber,
+        dateOfBirth,
+        admissionDate,
+        gender,
+        previousSchool,
+        physicalDisability,
+        gaurdianFullName,
+        gaurdianAddress,
+        gaurdianContactNumber,
+        gaurdianProfession,
+        class: classId,
+      },
     },
     { new: true }
   );
 
   if (!updatedStudent) {
-    return res
-      .status(500)
-      .json(new GenericError(500, "Error while updating student."));
+    return res.status(500).json(new GenericError(404, "Student not found"));
   }
   res
     .status(200)
@@ -264,6 +264,11 @@ const updateStudentById = handleAsync(async (req, res) => {
 
 const getStudents = handleAsync(async (_, res) => {
   const students = await Student.aggregate([
+    {
+      $match: {
+        hasLeft: false,
+      },
+    },
     {
       $lookup: {
         from: "classes",
@@ -303,6 +308,55 @@ const getStudents = handleAsync(async (_, res) => {
   return res
     .status(200)
     .json(new GenericReponse(200, "Students fetched successfully", students));
+});
+const getLeftStudents = handleAsync(async (_, res) => {
+  const students = await Student.aggregate([
+    {
+      $match: {
+        hasLeft: true,
+      },
+    },
+    {
+      $lookup: {
+        from: "classes",
+        localField: "class",
+        foreignField: "_id",
+        as: "classValues",
+        pipeline: [
+          {
+            $project: {
+              createdAt: 0,
+              updatedAt: 0,
+              __v: 0,
+            },
+          },
+        ],
+      },
+    },
+    {
+      $addFields: {
+        classValues: {
+          $first: "$classValues",
+        },
+      },
+    },
+    {
+      $project: {
+        __v: 0,
+        class: 0,
+      },
+    },
+  ]);
+  if (!students) {
+    return res
+      .status(500)
+      .json(new GenericError(500, "Error while fetching students"));
+  }
+  return res
+    .status(200)
+    .json(
+      new GenericReponse(200, "Left Student fetched successfully", students)
+    );
 });
 
 const getStudentById = handleAsync(async (req, res) => {
@@ -357,10 +411,34 @@ const getStudentById = handleAsync(async (req, res) => {
     .json(new GenericReponse(200, "Student fetched successfully", student[0]));
 });
 
+const makeStudentLeave = handleAsync(async (req, res) => {
+  const { id } = req.params;
+
+  const isValidId = mongoose.isValidObjectId(id);
+  if (!isValidId) {
+    return res.status(400).json(new GenericError(400, "Invalid Id"));
+  }
+  const student = await Student.findByIdAndUpdate(
+    id,
+    {
+      hasLeft: true,
+    },
+    { new: true }
+  );
+  if (!student) {
+    return res.status(404).json(new GenericError(404, "Student not found"));
+  }
+  return res
+    .status(200)
+    .json(new GenericReponse(200, "Student made leave successfully", student));
+});
+
 export {
   addStudent,
   deleteStudentById,
+  getLeftStudents,
   getStudentById,
   getStudents,
+  makeStudentLeave,
   updateStudentById,
 };
