@@ -6,6 +6,7 @@ import adminRouter from "./routes/admin.route.js";
 import classRouter from "./routes/class.router.js";
 import examRouter from "./routes/exam.route.js";
 import feeRouter from "./routes/fee.route.js";
+import resultRouter from "./routes/result.route.js";
 import studentRouter from "./routes/student.router.js";
 import subjectRouter from "./routes/subject.route.js";
 
@@ -32,4 +33,5 @@ app.use(`${API_PREFIX}/student`, studentRouter);
 app.use(`${API_PREFIX}/subject`, subjectRouter);
 app.use(`${API_PREFIX}/fee`, feeRouter);
 app.use(`${API_PREFIX}/exam`, examRouter);
+app.use(`${API_PREFIX}/result`, resultRouter);
 export { app };
