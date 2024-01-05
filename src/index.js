@@ -13,9 +13,7 @@ connectDB()
   .then(() => {
     const PORT = process.env.PORT || 3000;
     app.listen(PORT, () => {
-      console.log(
-        `🚀 Server is listening at host ${hostname} on port ${PORT} 🎉`
-      );
+      console.log(`🚀 Server is listening at host ${hostname}:${PORT} 🎉`);
     });
     app.on("error", (error) =>
       console.log(`❌ Server is not running due to : ${error} ❌`)
