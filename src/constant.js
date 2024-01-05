@@ -10,3 +10,4 @@ export const REFRESH_TOKEN = "refreshToken";
 export const PASSWORD = "password";
 export const SECTION_LIST = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"];
 export const GENDER_LIST = ["Male", "Female", "Other"];
+export const NEPALI_MONTHS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
