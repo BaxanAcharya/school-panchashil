@@ -2,17 +2,23 @@ import mongoose from "mongoose";
 import { TransportationArea } from "../models/transportation.model.js";
 import { TransportationFee } from "../models/transportationFee.js";
 import { GenericError } from "../utils/GenericError.js";
+import { GenericReponse } from "../utils/GenericResponse.js";
 import { handleAsync } from "../utils/handleAsync.js";
-import { validateFee } from "../validation/transportation.validation.js";
+import {
+  validateFee,
+  validateFrom,
+  validateTo,
+} from "../validation/transportation.validation.js";
 
 const addTransportationFee = handleAsync(async (req, res) => {
   const { from, to, fee } = req.body;
-  if (!mongoose.Types.ObjectId.isValid(from)) {
-    return res.status(400).json(new GenericError(400, "Invalid From"));
+  const isValidFrom = validateFrom(from);
+  if (isValidFrom) {
+    return res.status(400).json(new GenericError(400, isValidFrom));
   }
-
-  if (!mongoose.Types.ObjectId.isValid(to)) {
-    return res.status(400).json(new GenericError(400, "Invalid To"));
+  const isValidTo = validateTo(to);
+  if (isValidTo) {
+    return res.status(400).json(new GenericError(400, isValidTo));
   }
   const isValidFee = validateFee(fee);
   if (isValidFee) {
@@ -33,7 +39,19 @@ const addTransportationFee = handleAsync(async (req, res) => {
       .json(new GenericError(404, `To Area ${to} not found`));
   }
 
-  const areaFee = TransportationFee.create({
+  const isFee = await TransportationFee.findOne({
+    from,
+    to,
+  });
+  if (isFee) {
+    return res
+      .status(409)
+      .json(
+        new GenericError(409, `Fee already exists from area ${from} to ${to}`)
+      );
+  }
+
+  const areaFee = await TransportationFee.create({
     from,
     to,
     fee,
@@ -44,7 +62,7 @@ const addTransportationFee = handleAsync(async (req, res) => {
   }
   res
     .status(201)
-    .json(new GenericReponse(201, "Area Added Successfully", areaFee));
+    .json(new GenericReponse(201, "Area Fee Added Successfully", areaFee));
 });
 
 const getTransportationFees = handleAsync(async (req, res) => {
@@ -63,7 +81,7 @@ const getTransportationFees = handleAsync(async (req, res) => {
     query.to = to;
   }
   const fees = await TransportationFee.find(query)
-    .populate("from", "name")
+    .populate("from", "name ")
     .populate("to", "name");
   res.json(new GenericReponse(200, "Fees Fetched Successfully", fees));
 });
@@ -84,17 +102,9 @@ const getTransportationFee = handleAsync(async (req, res) => {
 
 const updateTransportationFee = handleAsync(async (req, res) => {
   const { id } = req.params;
-  const { from, to, fee } = req.body;
+  const { fee } = req.body;
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return res.status(400).json(new GenericError(400, "Invalid Id"));
-  }
-
-  if (!mongoose.Types.ObjectId.isValid(from)) {
-    return res.status(400).json(new GenericError(400, "Invalid From"));
-  }
-
-  if (!mongoose.Types.ObjectId.isValid(to)) {
-    return res.status(400).json(new GenericError(400, "Invalid To"));
   }
 
   const isValidFee = validateFee(fee);
@@ -102,43 +112,16 @@ const updateTransportationFee = handleAsync(async (req, res) => {
     return res.status(400).json(new GenericError(400, isValidFee));
   }
 
-  const fromArea = await TransportationArea.findById(from);
-  if (!fromArea) {
-    return res
-      .status(404)
-      .json(new GenericError(404, `From Area ${from} not found`));
-  }
-
-  const toArea = await TransportationArea.findById(to);
-  if (!toArea) {
-    return res
-      .status(404)
-      .json(new GenericError(404, `To Area ${to} not found`));
-  }
-
-  const isFee = await TransportationFee.find({
-    from,
-    to,
-  });
-
-  if (isFee) {
-    return res
-      .status(400)
-      .json(new GenericError(400, "Fee already exists for this area"));
-  }
-
   const areaFee = await TransportationFee.findByIdAndUpdate(
     id,
     {
-      from,
-      to,
       fee,
     },
     { new: true }
   );
 
   if (!areaFee) {
-    return res.status(500).json(new GenericError(500, "Something went wrong"));
+    return res.status(404).json(new GenericError(404, "Fee not found"));
   }
   res
     .status(201)

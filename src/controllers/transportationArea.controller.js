@@ -12,11 +12,11 @@ const addTransportationArea = handleAsync(async (req, res) => {
     return res.status(400).json(new GenericError(400, isAreaValid));
   }
 
-  const area = TransportationArea.findOne({ name });
+  const area = await TransportationArea.findOne({ name });
   if (area) {
     return res
-      .status(400)
-      .json(new GenericError(400, `Area with name ${area} already exists`));
+      .status(409)
+      .json(new GenericError(409, `Area with name ${area} already exists`));
   }
 
   const transportationArea = await TransportationArea.create({

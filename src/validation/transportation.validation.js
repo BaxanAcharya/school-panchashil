@@ -1,6 +1,8 @@
+import { mongo } from "mongoose";
+
 const validateArea = (area) => {
   if (!area) {
-    return "Area is required";
+    return "Name is required";
   }
 };
 
@@ -16,4 +18,21 @@ const validateFee = (fee) => {
   }
 };
 
-export { validateArea, validateFee };
+const validateFrom = (from) => {
+  if (!from) {
+    return "From is required";
+  }
+  if (!mongo.ObjectId.isValid(from)) {
+    return "Invalid From";
+  }
+};
+const validateTo = (to) => {
+  if (!to) {
+    return "To is required";
+  }
+  if (!mongo.ObjectId.isValid(to)) {
+    return "Invalid To";
+  }
+};
+
+export { validateArea, validateFee, validateFrom, validateTo };
