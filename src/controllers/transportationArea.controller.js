@@ -1,9 +1,9 @@
 import mongoose from "mongoose";
-import { TransportationArea } from "../models/transportation.model";
-import { GenericError } from "../utils/GenericError";
-import { GenericReponse } from "../utils/GenericResponse";
-import { handleAsync } from "../utils/handleAsync";
-import { validateArea } from "../validation/transportation.validation";
+import { TransportationArea } from "../models/transportation.model.js";
+import { GenericError } from "../utils/GenericError.js";
+import { GenericReponse } from "../utils/GenericResponse.js";
+import { handleAsync } from "../utils/handleAsync.js";
+import { validateArea } from "../validation/transportation.validation.js";
 
 const addTransportationArea = handleAsync(async (req, res) => {
   const { name } = req.body;

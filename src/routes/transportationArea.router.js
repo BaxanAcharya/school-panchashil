@@ -5,8 +5,8 @@ import {
   getAreaById,
   getAreas,
   updateArea,
-} from "../controllers/transportationArea.controller";
-import { verifyJWT } from "../middleware/auth.middleware";
+} from "../controllers/transportationArea.controller.js";
+import { verifyJWT } from "../middleware/auth.middleware.js";
 
 const router = Router();
 router.route("/").post(verifyJWT, addTransportationArea);

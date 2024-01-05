@@ -4,8 +4,8 @@ import {
   getTransportationFee,
   getTransportationFees,
   updateTransportationFee,
-} from "../controllers/transportationFee.controller";
-import { verifyJWT } from "../middleware/auth.middleware";
+} from "../controllers/transportationFee.controller.js";
+import { verifyJWT } from "../middleware/auth.middleware.js";
 
 const router = Router();
 router.route("/").post(verifyJWT, addTransportationFee);
