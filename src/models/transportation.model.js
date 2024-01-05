@@ -1,10 +1,9 @@
 import mongoose from "mongoose";
 
-const transportationSchema = new mongoose.Schema(
+const transportationAreaSchema = new mongoose.Schema(
   {
-    type: {
+    name: {
       type: String,
-      enum: ["Vehicle", "Walking"],
       required: true,
       trim: true,
     },
@@ -12,7 +11,7 @@ const transportationSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-export const Transportation = mongoose.model(
-  "Transportation",
-  transportationSchema
+export const TransportationArea = mongoose.model(
+  "TransportationArea",
+  transportationAreaSchema
 );

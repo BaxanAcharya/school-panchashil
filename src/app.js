@@ -4,11 +4,13 @@ import express from "express";
 import { API_PREFIX, PARSER_LIMIT } from "./constant.js";
 import adminRouter from "./routes/admin.route.js";
 import classRouter from "./routes/class.router.js";
-import examRouter from "./routes/exam.route.js";
-import feeRouter from "./routes/fee.route.js";
-import resultRouter from "./routes/result.route.js";
+import examRouter from "./routes/exam.router.js";
+import feeRouter from "./routes/fee.router.js";
+import resultRouter from "./routes/result.router.js";
 import studentRouter from "./routes/student.router.js";
-import subjectRouter from "./routes/subject.route.js";
+import subjectRouter from "./routes/subject.router.js";
+import transportationAreaRouter from "./routes/transportationArea.router.js";
+import transportationFeeRouter from "./routes/transportationFee.router.js";
 
 const app = express();
 app.use(
@@ -34,4 +36,6 @@ app.use(`${API_PREFIX}/subject`, subjectRouter);
 app.use(`${API_PREFIX}/fee`, feeRouter);
 app.use(`${API_PREFIX}/exam`, examRouter);
 app.use(`${API_PREFIX}/result`, resultRouter);
+app.use(`${API_PREFIX}/transportationArea`, transportationAreaRouter);
+app.use(`${API_PREFIX}/transportationFee`, transportationFeeRouter);
 export { app };
