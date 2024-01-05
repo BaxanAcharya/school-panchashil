@@ -48,7 +48,21 @@ const addTransportationFee = handleAsync(async (req, res) => {
 });
 
 const getTransportationFees = handleAsync(async (req, res) => {
-  const fees = await TransportationFee.find({})
+  const { from, to } = req.query;
+  const query = {};
+  if (from) {
+    if (!mongoose.Types.ObjectId.isValid(from)) {
+      return res.status(400).json(new GenericError(400, "Invalid From"));
+    }
+    query.from = from;
+  }
+  if (to) {
+    if (!mongoose.Types.ObjectId.isValid(to)) {
+      return res.status(400).json(new GenericError(400, "Invalid To"));
+    }
+    query.to = to;
+  }
+  const fees = await TransportationFee.find(query)
     .populate("from", "name")
     .populate("to", "name");
   res.json(new GenericReponse(200, "Fees Fetched Successfully", fees));
