@@ -1,10 +1,13 @@
 import mongoose from "mongoose";
+import path from "path";
+import { fileURLToPath } from "url";
 import Bill from "../models/bill.model.js";
 import { Fee } from "../models/fee.model.js";
 import { Student } from "../models/student.model.js";
 import { TransportationFee } from "../models/transportationFee.js";
 import { GenericError } from "../utils/GenericError.js";
 import { GenericReponse } from "../utils/GenericResponse.js";
+import { uplaodOnBucket } from "../utils/bucket.js";
 import { handleAsync } from "../utils/handleAsync.js";
 import {
   convertToNepaliDate,
@@ -17,7 +20,6 @@ import {
   validateStudent,
   validateYear,
 } from "../validation/bill.validation.js";
-
 const getString = (data) => {
   let rows = "";
   data.forEach((item, index) => {
@@ -340,6 +342,7 @@ const updateBill = handleAsync(async (req, res) => {
   toUpdate.total += care || isBill.care.amount;
   toUpdate.total += due || isBill.due.amount;
   toUpdate.total += diary || isBill.diary.amount;
+  toUpdate.url = null;
 
   const updatedBill = await Bill.findByIdAndUpdate(
     id,
@@ -384,6 +387,12 @@ const printBill = handleAsync(async (req, res) => {
 
   if (!isBill) {
     return res.status(404).json(new GenericError(404, "Bill not found"));
+  }
+
+  if (isBill.url) {
+    return res
+      .status(200)
+      .json(new GenericReponse(200, "Bill Printed Successfully", isBill));
   }
 
   const listOfFees = [];
@@ -561,10 +570,15 @@ const printBill = handleAsync(async (req, res) => {
   </html> `;
 
   generatePDF(html, `${id}.pdf`)
-    .then(() => {
+    .then(async () => {
+      const __dirname = fileURLToPath(import.meta.url);
+      const filePath = path.join(__dirname, `../../../public/temp/${id}.pdf`);
+      const pathUrl = await uplaodOnBucket(filePath);
+      isBill.url = pathUrl;
+      await isBill.save();
       res
         .status(200)
-        .json(new GenericReponse(200, "Bill Printed Successfully", {}));
+        .json(new GenericReponse(200, "Bill Printed Successfully", isBill));
     })
     .catch((err) => {
       res
