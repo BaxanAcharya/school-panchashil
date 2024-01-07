@@ -1,0 +1,173 @@
+<!doctype html>
+    <html lang="en">
+      <head>
+        <meta charset="UTF-8" />
+        <title>School Bill</title>
+        <style>
+          body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+          }
+          .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border: 2px solid #000; /* Add black border */
+          }
+    
+          h1 {
+            text-align: center;
+            color: #333;
+          }
+    
+          .student-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+          }
+    
+          .student-info p {
+            margin: 5px 0;
+          }
+    
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            border: 1px solid black;
+          }
+    
+          th,
+          td {
+            padding: 8px;
+            text-align: left;
+            border: 1px solid black;
+  
+          }
+    
+    
+          .total {
+            margin-top: 20px;
+            text-align: right;
+          }
+    
+          .footer {
+            margin-top: 20px;
+            text-align: center;
+            color: #888;
+          }
+    
+          .monthly-bill-info {
+            border-top: 2px solid #000;
+            margin-top: 20px;
+            padding-top: 20px;
+          }
+    
+          .monthly-bill-info h2 {
+            text-align: center;
+            font-weight: bold;
+            text-decoration: underline;
+          }
+    
+          .monthly-bill-info p {
+            text-align: center;
+          }
+    
+          .bill-date {
+            text-align: right;
+            color: #888;
+          }
+        </style>
+      </head>
+    
+      <body>
+        <div class="container">
+          <img
+            src="https://panchashil.s3.amazonaws.com/logo/logo-rectangle.png"
+            width="100%"
+            height="100px"
+            style="object-fit: contain"
+            alt="School Rectangle Logo"
+          />
+          <p style="text-align: center">
+            Bill Number:
+            <span style="color: #ff6600; font-weight: bold"
+              >#${isBill.billNo}</span
+            >
+          </p>
+    
+          <div class="student-info">
+            <div>
+              <p><strong>Student Name:</strong> ${
+                isBill.student.id.fullName
+              }</p>
+              <p><strong>Roll No:</strong>${isBill.student.rollNo}</p>
+              <p><strong>Month:</strong> ${getNepaliMonthName(isBill.month)}</p>
+            </div>
+            <div>
+              <p>
+                <strong>Class:</strong> ${isBill.student.class.name} ${
+                  isBill.student.class.section
+                }
+              </p>
+              <p>
+               <strong> Date:</strong> ${convertToNepaliDate(
+                 isBill.date
+               )}</span>
+              </p>
+              <p><strong>Year:</strong> ${isBill.year}</p>
+            </div>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>S.N</th>
+                <th>Descriptions</th>
+                <th>Amount (Rs)</th>
+                <th>Remarks</th>
+              </tr>
+            </thead>
+            <tbody>
+            ${listOfFees.map((fee, index) => {
+              return `<tr>
+            <td>${index + 1}</td>
+            <td>${fee.note}</td>
+            <td>${fee.amount}</td>
+            <td></td>
+            </tr>`;
+            })}
+              
+            </tbody>
+          </table>
+          <div class="total">
+            <p><strong>Total :</strong> Rs ${isBill.total}</p>
+          </div>
+          <div>
+            <p>
+              <strong>Amount in words:</strong> ${numberToWords(isBill.total)}
+              Only
+            </p>
+          </div>
+          <div class="footer">
+            <p>
+              Note: Monthly fee should be paid within ten days from the starting of
+              every month.
+            </p>
+            <p>
+              For any queries, please contact the school office Number. (9855041017)
+            </p>
+          </div>
+          <div style="display: flex; align-items: center; justify-content: center">
+          <p>Signature:</p>
+          <span style="margin-top: 7px; margin-left: 5px; font-weight: bold">
+            ---------------------------</span
+          >
+        </div>
+        </div>
+      </body>
+    </html>    
