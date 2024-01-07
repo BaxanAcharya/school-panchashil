@@ -7,10 +7,33 @@ import { GenericError } from "../utils/GenericError.js";
 import { GenericReponse } from "../utils/GenericResponse.js";
 import { handleAsync } from "../utils/handleAsync.js";
 import {
+  convertToNepaliDate,
+  getNepaliMonthName,
+} from "../utils/nepaliDate.js";
+import numberToWords from "../utils/numberToWord.js";
+import { generatePDF } from "../utils/pdf.js";
+import {
   validateMonth,
   validateStudent,
   validateYear,
 } from "../validation/bill.validation.js";
+
+const getString = (data) => {
+  let rows = "";
+  data.forEach((item, index) => {
+    rows +=
+      "<tr>\n" +
+      "<td>" +
+      (index + 1) +
+      "</td>\n<td>" +
+      item.note +
+      "</td>\n<td>" +
+      item.amount +
+      "</td>\n<td></td>\n</tr>";
+  });
+
+  return rows;
+};
 
 const addBill = handleAsync(async (req, res) => {
   const {
@@ -355,15 +378,201 @@ const printBill = handleAsync(async (req, res) => {
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return res.status(400).json(new GenericError(400, "Invalid Bill Id"));
   }
-  const isBill = await Bill.findById(id);
+  const isBill = await Bill.findById(id)
+    .populate("student.id", "fullName")
+    .populate("student.class", "name  section");
+
   if (!isBill) {
     return res.status(404).json(new GenericError(404, "Bill not found"));
   }
-  res.status(200).json(
-    new GenericReponse(200, "Bill Printed Successfully", {
-      todo: "Is to implement",
+
+  const listOfFees = [];
+  listOfFees.push(isBill.admissionFee);
+  listOfFees.push(isBill.serviceFee);
+  listOfFees.push(isBill.schoolFee);
+  listOfFees.push(isBill.stationaryFee);
+  listOfFees.push(isBill.deposit);
+  listOfFees.push(isBill.snack);
+  listOfFees.push(isBill.transportation);
+  listOfFees.push(isBill.evaluation);
+  listOfFees.push(isBill.care);
+  listOfFees.push(isBill.due);
+  listOfFees.push(isBill.diary);
+
+  const html = `<!doctype html>
+  <html lang="en">
+    <head>
+      <meta charset="UTF-8" />
+      <title>School Bill</title>
+      <style>
+        body {
+          font-family: Arial, sans-serif;
+          margin: 0;
+          padding: 20px;
+          background-color: #f4f4f4;
+        }
+        .container {
+          max-width: 600px;
+          margin: 0 auto;
+          background-color: #fff;
+          padding: 20px;
+          border-radius: 8px;
+          box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+          border: 2px solid #000; /* Add black border */
+        }
+  
+        h1 {
+          text-align: center;
+          color: #333;
+        }
+  
+        .student-info {
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 20px;
+        }
+  
+        .student-info p {
+          margin: 5px 0;
+        }
+  
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          margin-top: 20px;
+          border: 1px solid black;
+        }
+  
+        th,
+        td {
+          padding: 8px;
+          text-align: left;
+          border: 1px solid black;
+
+        }
+  
+  
+        .total {
+          margin-top: 20px;
+          text-align: right;
+        }
+  
+        .footer {
+          margin-top: 20px;
+          text-align: center;
+          color: #888;
+        }
+  
+        .monthly-bill-info {
+          border-top: 2px solid #000;
+          margin-top: 20px;
+          padding-top: 20px;
+        }
+  
+        .monthly-bill-info h2 {
+          text-align: center;
+          font-weight: bold;
+          text-decoration: underline;
+        }
+  
+        .monthly-bill-info p {
+          text-align: center;
+        }
+  
+        .bill-date {
+          text-align: right;
+          color: #888;
+        }
+      </style>
+    </head> 
+    <body>
+      <div class="container">
+        <img
+          src="https://panchashil.s3.amazonaws.com/logo/logo-rectangle.png"
+          width="100%"
+          height="100px"
+          style="object-fit: contain"
+          alt="School Rectangle Logo"
+        />
+        <p style="text-align: center">
+          Bill Number:
+          <span style="font-weight: bold"
+            >#${isBill.billNo}</span
+          >
+        </p>
+        <div class="student-info">
+          <div>
+            <p><strong>Student Name:</strong> ${isBill.student.id.fullName}</p>
+            <p><strong>Roll No:</strong>${isBill.student.rollNo}</p>
+            <p><strong>Month:</strong> ${getNepaliMonthName(isBill.month)}</p>
+          </div>
+          <div>
+            <p>
+              <strong>Class:</strong> ${isBill.student.class.name} ${
+                isBill.student.class.section
+              }
+            </p>
+            <p>
+             <strong> Date:</strong> ${convertToNepaliDate(isBill.date)}</span>
+            </p>
+            <p><strong>Year:</strong> ${isBill.year}</p>
+          </div>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>S.N</th>
+              <th>Descriptions</th>
+              <th>Amount (Rs)</th>
+              <th>Remarks</th>
+            </tr>
+          </thead>
+          <tbody>
+          ${getString(listOfFees)}
+            
+          </tbody>
+        </table>
+        <div class="total">
+          <p><strong>Total :</strong> Rs ${isBill.total}</p>
+        </div>
+        <div>
+          <p>
+            <strong>Amount in words:</strong> ${numberToWords(isBill.total)}
+            Only
+          </p>
+        </div>
+        <div class="footer">
+          <p>
+            Note: Monthly fee should be paid within ten days from the starting of
+            every month.
+          </p>
+          <p>
+            For any queries, please contact the school office Number. (9855041017)
+          </p>
+        </div>
+        <div style="display: flex; align-items: center; justify-content: center">
+        <p>Signature:</p>
+        <span style="margin-top: 7px; margin-left: 5px; font-weight: bold">
+          ---------------------------</span
+        >
+      </div>
+      </div>
+    </body>
+  </html> `;
+
+  generatePDF(html, `${id}.pdf`)
+    .then(() => {
+      res
+        .status(200)
+        .json(new GenericReponse(200, "Bill Printed Successfully", {}));
     })
-  );
-  //:Todo
+    .catch((err) => {
+      res
+        .status(500)
+        .json(
+          new GenericError(500, err.message || "Error while printing bill")
+        );
+    });
 });
+
 export { addBill, deleteBill, getBill, getBills, printBill, updateBill };
