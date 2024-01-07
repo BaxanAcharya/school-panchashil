@@ -176,8 +176,32 @@ const addBill = handleAsync(async (req, res) => {
     .json(new GenericReponse(201, "Bill Created Successfully", bill));
 });
 
-const getBills = handleAsync(async (_, res) => {
-  const bills = await Bill.find()
+const getBills = handleAsync(async (req, res) => {
+  const query = {};
+  const { studentId } = req.query;
+  if (studentId) {
+    if (!mongoose.Types.ObjectId.isValid(studentId)) {
+      return res.status(400).json(new GenericError(400, "Invalid Student Id"));
+    }
+    query["student.id"] = studentId;
+  }
+  const { classId } = req.query;
+  if (classId) {
+    if (!mongoose.Types.ObjectId.isValid(classId)) {
+      return res.status(400).json(new GenericError(400, "Invalid Class Id"));
+    }
+    query["student.class"] = classId;
+  }
+  const { year } = req.query;
+  if (year) {
+    query.year = year;
+  }
+  const { month } = req.query;
+  if (month) {
+    query.month = month;
+  }
+
+  const bills = await Bill.find(query)
     .populate("student.id", "fullName")
     .populate("student.class", "name");
 
