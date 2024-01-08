@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>School Bill</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 20px;
+        background-color: #f4f4f4;
+      }
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        border: 2px solid #000; /* Add black border */
+      }
+
+      h1 {
+        text-align: center;
+        color: #333;
+      }
+
+      .student-info {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 20px;
+      }
+
+      .student-info p {
+        margin: 5px 0;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+        border: 1px solid black;
+      }
+
+      th,
+      td {
+        padding: 8px;
+        text-align: left;
+        border: 1px solid black;
+      }
+
+      .total {
+        margin-top: 20px;
+        text-align: right;
+      }
+
+      .footer {
+        margin-top: 20px;
+        text-align: center;
+        color: #888;
+      }
+
+      .monthly-bill-info {
+        border-top: 2px solid #000;
+        margin-top: 20px;
+        padding-top: 20px;
+      }
+
+      .monthly-bill-info h2 {
+        text-align: center;
+        font-weight: bold;
+        text-decoration: underline;
+      }
+
+      .monthly-bill-info p {
+        text-align: center;
+      }
+
+      .bill-date {
+        text-align: right;
+        color: #888;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <img
+        src="https://panchashil.s3.amazonaws.com/logo/logo-rectangle.png"
+        width="100%"
+        height="100px"
+        style="object-fit: contain"
+        alt="School Rectangle Logo"
+      />
+      <p
+        style="
+          text-align: center;
+          font-weight: bold;
+          margin-top: -0.5px;
+          font-size: large;
+        "
+      >
+        SECOND TERMINAL EXAMINATION 2080
+      </p>
+      <p
+        style="
+          text-align: center;
+          font-weight: bold;
+          margin-top: -10px;
+          font-size: x-large;
+          color: #0d7285;
+        "
+      >
+        Student's Progress Report
+      </p>
+      <div class="student-info">
+        <div>
+          <p><strong> Name:</strong> Biplab Acharya</p>
+          <p><strong>Class:</strong> 1</p>
+        </div>
+        <div>
+          <p><strong>Father's Name:</strong>Madan Acharya</p>
+          <p><strong> Roll No:</strong> 5</p>
+        </div>
+      </div>
+      <hr />
+      <div style="display: flex">
+        <table>
+          <thead>
+            <tr>
+              <th>S.N</th>
+              <th>Subject</th>
+              <th>Grade</th>
+              <th>GPA</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1</td>
+              <td>English</td>
+              <td>A+</td>
+              <td>4</td>
+            </tr>
+            <tr>
+              <td>2</td>
+              <td>Nepali</td>
+              <td>A+</td>
+              <td>4</td>
+            </tr>
+            <tr>
+              <td>3</td>
+              <td>Mathematics</td>
+              <td>A+</td>
+              <td>4</td>
+            </tr>
+            <tr>
+              <td>4</td>
+              <td>Science</td>
+              <td>A+</td>
+              <td>4</td>
+            </tr>
+          </tbody>
+        </table>
+        <div>
+          <img
+            src="https://panchashil.s3.amazonaws.com/logo/logo-circel.png"
+            height="150px"
+            width="150px"
+            style="object-fit: contain; margin-left: 100px"
+            alt="Circle logo"
+          />
+          <table style="margin-left: 10px">
+            <thead>
+              <tr>
+                <th>Interval in %</th>
+                <th>Grade</th>
+                <th>Description</th>
+                <th>Grade Point</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>90 to 100</td>
+                <td>A+</td>
+                <td>Outstanding</td>
+                <td>4</td>
+              </tr>
+              <tr>
+                <td>80 to 90</td>
+                <td>A</td>
+                <td>Excellent</td>
+                <td>3.6</td>
+              </tr>
+              <tr>
+                <td>70 to 80</td>
+                <td>B+</td>
+                <td>Very Good</td>
+                <td>3.2</td>
+              </tr>
+              <tr>
+                <td>60 to 70</td>
+                <td>B</td>
+                <td>Good</td>
+                <td>2.8</td>
+              </tr>
+              <tr>
+                <td>50 to 60</td>
+                <td>C+</td>
+                <td>Satisfactory</td>
+                <td>2.4</td>
+              </tr>
+              <tr>
+                <td>40 to 50</td>
+                <td>C</td>
+                <td>Acceptable</td>
+                <td>2</td>
+              </tr>
+              <tr>
+                <td>35 to 40</td>
+                <td>D</td>
+                <td>Basic</td>
+                <td>1.6</td>
+              </tr>
+              <tr>
+                <td>Below 35</td>
+                <td>NA</td>
+                <td>Not Applicable</td>
+                <td>-</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="total">
+        <p><strong>Total Marks Obtained:</strong> 400</p>
+      </div>
+      <hr />
+      <div class="student-info">
+        <div>
+          <p><strong>GPA:</strong> 4</p>
+          <p><strong> Remarks:</strong> Outstanding</p>
+        </div>
+        <div>
+          <p style="margin-top: 10px"><strong>Grade :</strong> A+</p>
+          <p style="margin-top: 10px"><strong> Attendence:</strong> 65 days</p>
+        </div>
+      </div>
+
+      <div class="student-info">
+        <div>
+          <p>----------------</p>
+          <p style="margin-top: 0px">Class Teacher</p>
+        </div>
+        <div>
+          <p>----------------</p>
+          <p style="margin-top: 0px">Principal</p>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

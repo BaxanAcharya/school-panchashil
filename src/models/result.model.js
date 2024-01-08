@@ -62,6 +62,10 @@ const resultSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
+    url: {
+      type: String,
+      required: false,
+    },
   },
 
   { timestamps: true }

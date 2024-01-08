@@ -557,7 +557,7 @@ const printBill = handleAsync(async (req, res) => {
               }
             </p>
             <p>
-             <strong> Date:</strong> ${convertToNepaliDate(isBill.date)}</span>
+             <strong> Date:</strong> ${convertToNepaliDate(isBill.date)}
             </p>
             <p><strong>Year:</strong> ${isBill.year}</p>
           </div>
