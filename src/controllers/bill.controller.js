@@ -280,69 +280,91 @@ const updateBill = handleAsync(async (req, res) => {
       amount: admissionFee,
       note: "Admission Fee (Yearly for new student only)",
     };
+  } else {
+    toUpdate.admissionFee = isBill.admissionFee;
   }
-  if (serviceFee) {
+  if (serviceFee !== null && serviceFee !== undefined) {
     toUpdate.serviceFee = {
       amount: serviceFee,
       note: "Project/Sport/First Aid/Extra Curricular Fee (Yearly)",
     };
+  } else {
+    toUpdate.serviceFee = isBill.serviceFee;
   }
-  if (stationaryFee) {
+  if (stationaryFee !== null && stationaryFee !== undefined) {
     toUpdate.stationaryFee = {
       amount: stationaryFee,
       note: "Stationary Fee (Monthly)",
     };
+  } else {
+    toUpdate.stationaryFee = isBill.stationaryFee;
   }
-  if (deposit) {
+  if (deposit !== null && deposit !== undefined) {
     toUpdate.deposit = {
       amount: deposit,
       note: "Deposit (Refundable)",
     };
+  } else {
+    toUpdate.deposit = isBill.deposit;
   }
-  if (snack) {
+  if (snack !== null && snack !== undefined) {
     toUpdate.snack = {
       amount: snack,
       note: "Snack (Monthly)",
     };
+  } else {
+    toUpdate.snack = isBill.snack;
   }
-  if (evaluation) {
+  if (evaluation !== null && evaluation !== undefined) {
     toUpdate.evaluation = {
       amount: evaluation,
       note: "Evaluation Fee (Yearly)",
     };
+  } else {
+    toUpdate.evaluation = isBill.evaluation;
   }
-  if (care) {
+  if (care !== null && care !== undefined) {
     toUpdate.care = {
       amount: care,
       note: "Care Fee (Monthly)",
     };
+  } else {
+    toUpdate.care = isBill.care;
   }
-  if (due) {
+  if (due !== null && due !== undefined) {
     toUpdate.due = {
       amount: due,
       note: "Due Fee (Monthly)",
     };
+  } else {
+    toUpdate.due = isBill.due;
   }
-  if (diary) {
+  if (diary !== null && diary !== undefined) {
     toUpdate.diary = {
       amount: diary,
       note: "Diary Fee (Yearly)",
     };
+  } else {
+    toUpdate.diary = isBill.diary;
   }
 
   toUpdate.total = 0;
-  toUpdate.total += admissionFee || isBill.admissionFee.amount;
-  toUpdate.total += serviceFee || isBill.serviceFee.amount;
+
+  toUpdate.total += admissionFee;
+  toUpdate.total += serviceFee;
   toUpdate.total += isBill.schoolFee.amount;
-  toUpdate.total += stationaryFee || isBill.stationaryFee.amount;
-  toUpdate.total += deposit || isBill.deposit.amount;
-  toUpdate.total += snack || isBill.snack.amount;
+  console.log(isBill.schoolFee.amount);
+  toUpdate.total += stationaryFee;
+  toUpdate.total += deposit;
+  toUpdate.total += snack;
   toUpdate.total += isBill.transportation.amount;
-  toUpdate.total += evaluation || isBill.evaluation.amount;
-  toUpdate.total += care || isBill.care.amount;
-  toUpdate.total += due || isBill.due.amount;
-  toUpdate.total += diary || isBill.diary.amount;
+  toUpdate.total += evaluation;
+  toUpdate.total += care;
+  toUpdate.total += due;
+  toUpdate.total += diary;
+  console.log(toUpdate);
   toUpdate.url = null;
+  return res.send();
 
   const updatedBill = await Bill.findByIdAndUpdate(
     id,
