@@ -118,5 +118,6 @@ dist
 .pnp.*
 
 public/temp/*
+run.sh
 
 # End of https://mrkandreev.name/snippets/gitignore-generator/#Node
