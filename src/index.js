@@ -13,7 +13,6 @@ connectDB()
   .then(() => {
     const PORT = process.env.PORT || 3000;
     app.listen(PORT, () => {
-      console.log("test");
       console.log(`🚀 Server is listening at host ${hostname}:${PORT} 🎉`);
     });
     app.on("error", (error) =>
