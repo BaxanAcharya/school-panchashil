@@ -1,7 +1,7 @@
 import puppeteer from "puppeteer";
 const pdfPath = "public/temp/";
 const generatePDF = async (html, outputPath) => {
-  //   pdf.create(html, { format: "A4", directory: pdfPath }).toFile(outputPath);
+  // NOTE::browser must be installed in the system to use this
   const browser = await puppeteer.launch({
     args: ["--no-sandbox", "--disable-setuid-sandbox"],
     headless: "new",

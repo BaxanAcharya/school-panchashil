@@ -275,7 +275,7 @@ const updateBill = handleAsync(async (req, res) => {
     return res.status(404).json(new GenericError(404, "Bill not found"));
   }
   const toUpdate = {};
-  if (admissionFee) {
+  if (admissionFee !== null && admissionFee !== undefined) {
     toUpdate.admissionFee = {
       amount: admissionFee,
       note: "Admission Fee (Yearly for new student only)",
@@ -350,21 +350,34 @@ const updateBill = handleAsync(async (req, res) => {
 
   toUpdate.total = 0;
 
-  toUpdate.total += admissionFee;
-  toUpdate.total += serviceFee;
+  toUpdate.total +=
+    admissionFee != !null && admissionFee !== undefined
+      ? admissionFee
+      : isBill.admissionFee.amount;
+  toUpdate.total +=
+    serviceFee !== null && serviceFee !== undefined
+      ? serviceFee
+      : isBill.serviceFee.amount;
   toUpdate.total += isBill.schoolFee.amount;
-  console.log(isBill.schoolFee.amount);
-  toUpdate.total += stationaryFee;
-  toUpdate.total += deposit;
-  toUpdate.total += snack;
+  toUpdate.total +=
+    stationaryFee !== null && stationaryFee !== undefined
+      ? stationaryFee
+      : isBill.stationaryFee.amount;
+  toUpdate.total +=
+    deposit !== null && deposit !== undefined ? deposit : isBill.deposit.amount;
+  toUpdate.total +=
+    snack !== null && snack !== undefined ? snack : isBill.snack.amount;
   toUpdate.total += isBill.transportation.amount;
-  toUpdate.total += evaluation;
-  toUpdate.total += care;
-  toUpdate.total += due;
-  toUpdate.total += diary;
-  console.log(toUpdate);
+  toUpdate.total +=
+    evaluation != null && evaluation !== undefined
+      ? evaluation
+      : isBill.evaluation.amount;
+  toUpdate.total +=
+    care != null && care !== undefined ? care : isBill.care.amount;
+  toUpdate.total += due != null && due !== undefined ? due : isBill.due.amount;
+  toUpdate.total +=
+    diary != null && diary !== undefined ? diary : isBill.diary.amount;
   toUpdate.url = null;
-  return res.send();
 
   const updatedBill = await Bill.findByIdAndUpdate(
     id,
