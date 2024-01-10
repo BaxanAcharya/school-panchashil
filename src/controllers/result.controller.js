@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import path from "path";
 import { fileURLToPath } from "url";
+import XLSX from "xlsx";
 import { Class } from "../models/class.model.js";
 import { Exam } from "../models/exam.model.js";
 import Result from "../models/result.model.js";
@@ -133,7 +134,10 @@ const addResult = handleAsync(async (req, res) => {
   const remarks = getRemarks(grade);
 
   const result = await Result.create({
-    student,
+    student: {
+      id: student,
+      rollNo: isStudent.rollNumber,
+    },
     class: classId,
     exam,
     marks: newMarks,
@@ -171,10 +175,7 @@ const getResults = handleAsync(async (req, res) => {
     query.exam = exam;
   }
   const results = await Result.find(query)
-    .populate({
-      path: "student",
-      select: "fullName fatherName rollNumber",
-    })
+    .populate("student.id", "fullName fatherName")
     .populate("class", "name section")
     .populate("exam", "name year");
   if (!results) {
@@ -188,10 +189,7 @@ const getResultById = handleAsync(async (req, res) => {
     return res.status(400).json(new GenericError(400, "Invalid result id"));
   }
   const result = await Result.findById(id)
-    .populate({
-      path: "student",
-      select: "fullName fatherName rollNumber",
-    })
+    .populate("student.id", "fullName fatherName")
     .populate("class", "name section")
     .populate("exam", "name year");
   if (!result) {
@@ -274,10 +272,7 @@ const updateResult = handleAsync(async (req, res) => {
     },
     { new: true }
   )
-    .populate({
-      path: "student",
-      select: "fullName fatherName rollNumber",
-    })
+    .populate("student.id", "fullName fatherName")
     .populate("class", "name section")
     .populate("exam", "name year");
   if (!result) {
@@ -293,10 +288,7 @@ const printMarkSheet = handleAsync(async (req, res) => {
     return res.status(400).json(new GenericError(400, "Invalid result id"));
   }
   const result = await Result.findById(id)
-    .populate({
-      path: "student",
-      select: "fullName fatherName rollNumber",
-    })
+    .populate("student.id", "fullName fatherName")
     .populate("class", "name section")
     .populate("exam", "name year");
   if (!result) {
@@ -425,14 +417,16 @@ const printMarkSheet = handleAsync(async (req, res) => {
         </p>
         <div class="student-info">
           <div>
-            <p><strong> Name:</strong> ${result.student.fullName}</p>
+            <p><strong> Name:</strong> ${result.student.id.fullName}</p>
             <p><strong>Class:</strong> ${result.class.name} ${
               result.class.section || ""
             }</p>
           </div>
           <div>
-            <p><strong>Father's Name:</strong> ${result.student.fatherName}</p>
-            <p><strong> Roll No:</strong> ${result.student.rollNumber}</p>
+            <p><strong>Father's Name:</strong> ${
+              result.student.id.fatherName
+            }</p>
+            <p><strong> Roll No:</strong> ${result.student.rollNo}</p>
           </div>
         </div>
         <hr />
@@ -577,10 +571,76 @@ const printMarkSheet = handleAsync(async (req, res) => {
         );
     });
 });
+const generateLedger = handleAsync(async (req, res) => {
+  const { examId, classId } = req.params;
+  if (!mongoose.Types.ObjectId.isValid(examId)) {
+    return res.status(400).json(new GenericError(400, "Invalid exam id"));
+  }
+  if (!mongoose.Types.ObjectId.isValid(classId)) {
+    return res.status(400).json(new GenericError(400, "Invalid class id"));
+  }
+  const _class = await Class.findById(classId);
+  if (!_class) {
+    return res.status(404).json(new GenericError(404, "Class not found"));
+  }
+  const exam = await Exam.findById(examId);
+  if (!exam) {
+    return res.status(404).json(new GenericError(404, "Exam not found"));
+  }
+
+  const results = await Result.find({ exam: examId }).populate(
+    "student.id",
+    "fullName"
+  );
+
+  //sort the results by rollNo
+  results.sort((a, b) => a.student.rollNo - b.student.rollNo);
+
+  const cleanData = results.map((result, i) => {
+    const data = {
+      ["S.N"]: i + 1,
+      ["Students Name"]: result.student.id.fullName,
+    };
+    result.marks.forEach((mark) => {
+      data[mark.subject] = mark.mark;
+    });
+    data["Attendence"] = result.attendence;
+    data["Total"] = result.total;
+    data["Percentage"] = result.percentage;
+    data["Grade"] = result.grade;
+    data["GPA"] = result.gpa;
+    data["Remarks"] = result.remarks;
+    return data;
+  });
+
+  try {
+    const workSheet = XLSX.utils.json_to_sheet(cleanData);
+    const workBook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workBook, workSheet, "Ledger");
+    const __dirname = fileURLToPath(import.meta.url);
+    const fileName = `${exam.name}-${exam.year}-${_class.name}.xlsx`;
+    const filePath = path.join(__dirname, `../../../public/temp/${fileName}`);
+    XLSX.writeFile(workBook, filePath);
+    const pathUrl = await uplaodOnBucket(filePath);
+    res.status(200).json(new GenericReponse(200, "Ledger", pathUrl));
+  } catch (error) {
+    res
+      .status(500)
+      .json(
+        new GenericError(500, error.message || "Error while generating ledger")
+      );
+  }
+
+  // return res.send(cleanData);
+  // res
+  //   .status(200)
+  //   .json(new GenericReponse(200, "Ledger", { exam, _class, results }));
+});
 
 export {
   addResult,
   deleteResult,
+  generateLedger,
   getResultById,
   getResults,
   printMarkSheet,

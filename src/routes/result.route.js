@@ -2,6 +2,7 @@ import { Router } from "express";
 import {
   addResult,
   deleteResult,
+  generateLedger,
   getResultById,
   getResults,
   printMarkSheet,
@@ -17,4 +18,5 @@ router.route("/:id").get(verifyJWT, getResultById);
 router.route("/:id").delete(verifyJWT, deleteResult);
 router.route("/:id").put(verifyJWT, updateResult);
 router.route("/:id/print").post(verifyJWT, printMarkSheet);
+router.route("/:examId/:classId/ledger").post(verifyJWT, generateLedger);
 export default router;
