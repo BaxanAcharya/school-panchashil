@@ -2,9 +2,15 @@ import mongoose from "mongoose";
 const resultSchema = new mongoose.Schema(
   {
     student: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Student",
-      required: true,
+      id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Student",
+        required: true,
+      },
+      rollNo: {
+        type: Number,
+        required: true,
+      },
     },
     class: {
       type: mongoose.Schema.Types.ObjectId,
