@@ -233,12 +233,7 @@ const updateSubjectById = handleAsync(async (req, res) => {
       .status(400)
       .json(new GenericError(400, "Subject id is not valid."));
   }
-  const { name, fullMarks, displayOrder, class: classId } = req.body;
-
-  const isNameValid = validateName(name);
-  if (isNameValid) {
-    return res.status(400).json(new GenericError(400, isNameValid));
-  }
+  const { fullMarks, displayOrder } = req.body;
 
   const isFullMarksValid = validateFullMarks(fullMarks);
   if (isFullMarksValid) {
@@ -250,46 +245,11 @@ const updateSubjectById = handleAsync(async (req, res) => {
     return res.status(400).json(new GenericError(400, isDisplayOrderValid));
   }
 
-  const isClassIdValid = validateClassId(classId);
-  if (isClassIdValid) {
-    return res.status(400).json(new GenericError(400, isClassIdValid));
-  }
-
-  if (!mongoose.isValidObjectId(classId)) {
-    return res
-      .status(400)
-      .json(new GenericError(400, "Class id is not valid."));
-  }
-
-  const isClass = await Class.findById(classId);
-  if (!isClass) {
-    return res.status(400).json(new GenericError(404, "Class Not Found."));
-  }
-
-  const isSubject = await Subject.findOne({
-    name: name.toUpperCase(),
-    class: classId,
-  });
-  if (isSubject) {
-    return res
-      .status(400)
-      .json(
-        new GenericError(
-          409,
-          `Subject ${name.toUpperCase()} already exists for class ${
-            isClass.name
-          }.`
-        )
-      );
-  }
-
   const updatedSubject = await Subject.findByIdAndUpdate(
     id,
     {
-      name: name.toUpperCase(),
       fullMarks,
       displayOrder,
-      class: classId,
     },
     { new: true }
   );
