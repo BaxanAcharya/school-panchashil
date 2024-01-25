@@ -7,7 +7,7 @@ const connectDB = async () => {
       `${process.env.DB_URI}/${DB_NAME}`,
       {}
     );
-    console.log("Connected to database", dbConnection.connection.host);
+    console.log("Connected to database!!! 🎉");
   } catch (error) {
     console.log("Error while connection to db", error);
     process.exit(1);
