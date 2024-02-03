@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   addTransportationFee,
+  deleteTransportationFee,
   getTransportationFee,
   getTransportationFees,
   updateTransportationFee,
@@ -12,4 +13,5 @@ router.route("/").post(verifyJWT, addTransportationFee);
 router.route("/").get(verifyJWT, getTransportationFees);
 router.route("/:id").get(verifyJWT, getTransportationFee);
 router.route("/:id").put(verifyJWT, updateTransportationFee);
+router.route("/:id").delete(verifyJWT, deleteTransportationFee);
 export default router;

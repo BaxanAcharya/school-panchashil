@@ -47,7 +47,10 @@ const addTransportationFee = handleAsync(async (req, res) => {
     return res
       .status(409)
       .json(
-        new GenericError(409, `Fee already exists from area ${from} to ${to}`)
+        new GenericError(
+          409,
+          `TransportationFee Fee already exists from area ${fromArea.name} to ${toArea.name}`
+        )
       );
   }
 
@@ -62,7 +65,9 @@ const addTransportationFee = handleAsync(async (req, res) => {
   }
   res
     .status(201)
-    .json(new GenericReponse(201, "Area Fee Added Successfully", areaFee));
+    .json(
+      new GenericReponse(201, "Transportation Fee Added Successfully", areaFee)
+    );
 });
 
 const getTransportationFees = handleAsync(async (req, res) => {
@@ -83,7 +88,9 @@ const getTransportationFees = handleAsync(async (req, res) => {
   const fees = await TransportationFee.find(query)
     .populate("from", "name ")
     .populate("to", "name");
-  res.json(new GenericReponse(200, "Fees Fetched Successfully", fees));
+  res.json(
+    new GenericReponse(200, "TransportationFee Fees Fetched Successfully", fees)
+  );
 });
 
 const getTransportationFee = handleAsync(async (req, res) => {
@@ -97,7 +104,9 @@ const getTransportationFee = handleAsync(async (req, res) => {
   if (!fee) {
     return res.status(404).json(new GenericError(404, "Fee not found"));
   }
-  res.json(new GenericReponse(200, "Fee Fetched Successfully", fee));
+  res.json(
+    new GenericReponse(200, "TransportationFee Fee Fetched Successfully", fee)
+  );
 });
 
 const updateTransportationFee = handleAsync(async (req, res) => {
@@ -125,11 +134,34 @@ const updateTransportationFee = handleAsync(async (req, res) => {
   }
   res
     .status(201)
-    .json(new GenericReponse(201, "Area Updated Successfully", areaFee));
+    .json(
+      new GenericReponse(
+        201,
+        "Transportation Fee Updated Successfully",
+        areaFee
+      )
+    );
+});
+
+const deleteTransportationFee = handleAsync(async (req, res) => {
+  const { id } = req.params;
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json(new GenericError(400, "Invalid Id"));
+  }
+  const fee = await TransportationFee.findByIdAndDelete(id);
+  if (!fee) {
+    return res.status(404).json(new GenericError(404, "Fee not found"));
+  }
+  res
+    .status(200)
+    .json(
+      new GenericReponse(200, "Transportation Fee Deleted Successfully", {})
+    );
 });
 
 export {
   addTransportationFee,
+  deleteTransportationFee,
   getTransportationFee,
   getTransportationFees,
   updateTransportationFee,

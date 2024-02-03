@@ -16,7 +16,9 @@ const addTransportationArea = handleAsync(async (req, res) => {
   if (area) {
     return res
       .status(409)
-      .json(new GenericError(409, `Area with name ${area} already exists`));
+      .json(
+        new GenericError(409, `Area with name ${area.name} already exists`)
+      );
   }
 
   const transportationArea = await TransportationArea.create({
