@@ -3,6 +3,7 @@ import {
   addStudent,
   deleteStudentById,
   getLeftStudents,
+  getStudentByClass,
   getStudentById,
   getStudents,
   makeStudentLeave,
@@ -18,4 +19,5 @@ router.route("/:id").delete(verifyJWT, deleteStudentById);
 router.route("/:id").put(verifyJWT, updateStudentById);
 router.route("/:id").get(verifyJWT, getStudentById);
 router.route("/leave/:id").put(verifyJWT, makeStudentLeave);
+router.route("/class/:classId").get(verifyJWT, getStudentByClass);
 export default router;

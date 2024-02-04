@@ -77,7 +77,11 @@ const addResult = handleAsync(async (req, res) => {
     return res.status(400).json(new GenericError(400, isValidAttendence));
   }
 
-  const resultExist = await Result.findOne({ student, class: classId, exam });
+  const resultExist = await Result.findOne({
+    "student.id": new mongoose.Types.ObjectId(student),
+    class: classId,
+    exam,
+  });
   if (resultExist) {
     return res.status(409).json(new GenericError(409, "Result already exists"));
   }
@@ -160,7 +164,7 @@ const getResults = handleAsync(async (req, res) => {
     if (!mongoose.Types.ObjectId.isValid(student)) {
       return res.status(400).json(new GenericError(400, "Invalid student id"));
     }
-    query.student = student;
+    query["student.id"] = new mongoose.Types.ObjectId(student);
   }
   if (classId) {
     if (!mongoose.Types.ObjectId.isValid(classId)) {
@@ -630,11 +634,6 @@ const generateLedger = handleAsync(async (req, res) => {
         new GenericError(500, error.message || "Error while generating ledger")
       );
   }
-
-  // return res.send(cleanData);
-  // res
-  //   .status(200)
-  //   .json(new GenericReponse(200, "Ledger", { exam, _class, results }));
 });
 
 export {

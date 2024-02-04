@@ -433,10 +433,65 @@ const makeStudentLeave = handleAsync(async (req, res) => {
     .json(new GenericReponse(200, "Student made leave successfully", student));
 });
 
+const getStudentByClass = handleAsync(async (req, res) => {
+  const { classId: id } = req.params;
+  const isValidId = mongoose.isValidObjectId(id);
+  if (!isValidId) {
+    return res.status(400).json(new GenericError(400, "Invalid Id"));
+  }
+  const students = await Student.aggregate([
+    {
+      $match: {
+        class: new mongoose.Types.ObjectId(id),
+        hasLeft: false,
+      },
+    },
+    {
+      $lookup: {
+        from: "classes",
+        localField: "class",
+        foreignField: "_id",
+        as: "classValues",
+        pipeline: [
+          {
+            $project: {
+              createdAt: 0,
+              updatedAt: 0,
+              __v: 0,
+            },
+          },
+        ],
+      },
+    },
+    {
+      $addFields: {
+        classValues: {
+          $first: "$classValues",
+        },
+      },
+    },
+    {
+      $project: {
+        __v: 0,
+        class: 0,
+      },
+    },
+  ]);
+  if (!students) {
+    return res
+      .status(500)
+      .json(new GenericError(500, "Error while fetching students"));
+  }
+  return res
+    .status(200)
+    .json(new GenericReponse(200, "Students fetched successfully", students));
+});
+
 export {
   addStudent,
   deleteStudentById,
   getLeftStudents,
+  getStudentByClass,
   getStudentById,
   getStudents,
   makeStudentLeave,
