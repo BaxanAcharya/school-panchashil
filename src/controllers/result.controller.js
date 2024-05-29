@@ -636,12 +636,74 @@ const generateLedger = handleAsync(async (req, res) => {
   }
 });
 
+const getResultsOfStudentIn = handleAsync(async (req, res) => {
+  const { examId } = req.params;
+  const { studentIds } = req.query;
+  if (!mongoose.Types.ObjectId.isValid(examId)) {
+    return res.status(400).json(new GenericError(400, "Invalid exam id"));
+  }
+
+  if (!studentIds) {
+    return res
+      .status(400)
+      .json(new GenericError(400, "Student ids are required"));
+  }
+
+  let students = [];
+  if (Array.isArray(studentIds)) {
+    students = studentIds;
+  } else {
+    students = studentIds.split(",");
+  }
+
+  if (!Array.isArray(students)) {
+    return res
+      .status(400)
+      .json(new GenericError(400, "Student ids should be an array"));
+  }
+
+  students.forEach((id) => {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res
+        .status(400)
+        .json(new GenericError(400, `Invalid student id ${id}`));
+    }
+  });
+  const results = await Result.find({
+    "student.id": { $in: students },
+    exam: examId,
+    marks: { $ne: null },
+    total: { $ne: null },
+    percentage: { $ne: null },
+    grade: { $ne: null },
+    gpa: { $ne: null },
+    remarks: { $ne: null },
+    attendence: { $ne: null },
+  })
+    .populate("student.id", "fullName fatherName rollNumber")
+    .populate("class", "name section")
+    .populate("exam", "name year")
+    .populate("marks")
+    .populate("total")
+    .populate("percentage")
+    .populate("grade")
+    .populate("gpa")
+    .populate("remarks")
+    .populate("attendence");
+
+  if (!results) {
+    return res.status(500).json(new GenericError(500, "Internal server error"));
+  }
+  return res.status(200).json(new GenericReponse(200, "Results", results));
+});
+
 export {
   addResult,
   deleteResult,
   generateLedger,
   getResultById,
   getResults,
+  getResultsOfStudentIn,
   printMarkSheet,
   updateResult,
 };
