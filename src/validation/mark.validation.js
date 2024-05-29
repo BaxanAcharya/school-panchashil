@@ -33,7 +33,7 @@ const validMarks = (marks) => {
     if (typeof mark !== "object") {
       return "Mark must be an object";
     }
-    if (!mark.subject || !mark.mark) {
+    if (mark.subject === undefined || mark.mark === undefined) {
       return "Mark must have subject and mark property";
     }
     if (typeof mark.subject !== "string") {
@@ -56,7 +56,7 @@ const validMarks = (marks) => {
 };
 
 const validAttendence = (attendence) => {
-  if (!attendence) {
+  if (attendence === undefined) {
     return "Attendence is required";
   }
   if (typeof attendence !== "number") {
