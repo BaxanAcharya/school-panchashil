@@ -108,6 +108,11 @@ const getSubjects = handleAsync(async (_, res) => {
         class: 0,
       },
     },
+    {
+      $sort: {
+        displayOrder: 1,
+      },
+    },
   ]);
   if (!subjects) {
     return res
@@ -213,6 +218,11 @@ const getSubjectByClassId = handleAsync(async (req, res) => {
       $project: {
         __v: 0,
         class: 0,
+      },
+    },
+    {
+      $sort: {
+        displayOrder: 1,
       },
     },
   ]);

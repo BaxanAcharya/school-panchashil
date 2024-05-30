@@ -299,6 +299,11 @@ const getStudents = handleAsync(async (_, res) => {
         class: 0,
       },
     },
+    {
+      $sort: {
+        rollNumber: 1,
+      },
+    },
   ]);
   if (!students) {
     return res
@@ -344,6 +349,11 @@ const getLeftStudents = handleAsync(async (_, res) => {
       $project: {
         __v: 0,
         class: 0,
+      },
+    },
+    {
+      $sort: {
+        rollNumber: 1,
       },
     },
   ]);
@@ -474,6 +484,11 @@ const getStudentByClass = handleAsync(async (req, res) => {
       $project: {
         __v: 0,
         class: 0,
+      },
+    },
+    {
+      $sort: {
+        rollNumber: 1,
       },
     },
   ]);

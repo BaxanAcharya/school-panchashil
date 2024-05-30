@@ -15,6 +15,7 @@ import { handleAsync } from "../utils/handleAsync.js";
 import { generatePDF } from "../utils/pdf.js";
 import {
   validAttendence,
+  validBulkResult,
   validClass,
   validExam,
   validMarks,
@@ -156,6 +157,148 @@ const addResult = handleAsync(async (req, res) => {
     return res.status(500).json(new GenericError(500, "Internal server error"));
   }
   return res.status(201).json(new GenericReponse(201, "Result added", result));
+});
+
+const addResultBulk = handleAsync(async (req, res) => {
+  const { examId } = req.params;
+  const isValidMarks = validBulkResult(req.body);
+  if (isValidMarks) {
+    return res.status(400).json(new GenericError(400, isValidMarks));
+  }
+
+  if (!mongoose.Types.ObjectId.isValid(examId)) {
+    return res.status(400).json(new GenericError(400, "Invalid exam id"));
+  }
+  const exam = await Exam.findById(examId);
+  if (!exam) {
+    return res.status(404).json(new GenericError(404, "Exam not found"));
+  }
+
+  const { result } = req.body;
+  const studentIds = result.map((mark) => mark.student);
+  const students = await Student.find({ _id: { $in: studentIds } });
+
+  if (students.length !== studentIds.length) {
+    return res
+      .status(404)
+      .json(new GenericError(404, "One or more students not found"));
+  }
+
+  const subjects = await Subject.find({ class: students[0].class });
+  const avaliableMarks = await Result.find({
+    "student.id": {
+      $in: studentIds.map((id) => new mongoose.Types.ObjectId(id)),
+    },
+    exam: new mongoose.Types.ObjectId(examId),
+  });
+  const newResults = [];
+  const toUpdateResults = [];
+  result.forEach((result) => {
+    const isAvaliable = avaliableMarks.find(
+      (mark) => mark.student.id.toString() === result.student
+    );
+    if (isAvaliable) {
+      const marks = [];
+      result.marks.forEach((mark) => {
+        const subject = subjects.find((s) => s.name === mark.name);
+        if (subject) {
+          marks.push({
+            subject: subject.name,
+            fullMarks: subject.fullMarks,
+            mark: mark.mark,
+          });
+        }
+      });
+
+      isAvaliable.marks = marks;
+      isAvaliable.attendence = result.attendence;
+      isAvaliable.url = null;
+      const totalSubjectMarks = isAvaliable.marks.reduce(
+        (total, subject) => total + subject.fullMarks,
+        0
+      );
+      isAvaliable.total = totalSubjectMarks;
+      const totalMarksObtained = isAvaliable.marks.reduce(
+        (total, subject) => total + subject.mark,
+        0
+      );
+      const roundedPercentage = (totalMarksObtained / totalSubjectMarks) * 100;
+      const percentage =
+        roundedPercentage % 1 === 0
+          ? roundedPercentage.toFixed(0)
+          : roundedPercentage.toFixed(2);
+      isAvaliable.percentage = percentage;
+
+      const grade = getGrade(totalMarksObtained, totalSubjectMarks);
+      isAvaliable.grade = grade;
+      const gpa = getGpa(totalMarksObtained, totalSubjectMarks);
+      isAvaliable.gpa = gpa;
+      const remarks = getRemarks(grade);
+      isAvaliable.remarks = remarks;
+      toUpdateResults.push(isAvaliable);
+    } else {
+      const createResult = new Result({
+        student: {
+          id: result.student,
+          rollNo: students.find((s) => s._id.toString() === result.student)
+            .rollNumber,
+        },
+        class: students[0].class,
+        exam: examId,
+        marks: result.marks.map((mark) => {
+          const subject = subjects.find((s) => s.name === mark.name);
+          if (subject) {
+            return {
+              subject: subject.name,
+              fullMarks: subject.fullMarks,
+              mark: mark.mark,
+            };
+          }
+        }),
+        attendence: result.attendence,
+      });
+
+      createResult.url = null;
+      const totalSubjectMarks = createResult.marks.reduce(
+        (total, subject) => total + subject.fullMarks,
+        0
+      );
+      createResult.total = totalSubjectMarks;
+      const totalMarksObtained = createResult.marks.reduce(
+        (total, subject) => total + subject.mark,
+        0
+      );
+      const roundedPercentage = (totalMarksObtained / totalSubjectMarks) * 100;
+      const percentage =
+        roundedPercentage % 1 === 0
+          ? roundedPercentage.toFixed(0)
+          : roundedPercentage.toFixed(2);
+      createResult.percentage = percentage;
+
+      const grade = getGrade(totalMarksObtained, totalSubjectMarks);
+      createResult.grade = grade;
+      const gpa = getGpa(totalMarksObtained, totalSubjectMarks);
+      createResult.gpa = gpa;
+      const remarks = getRemarks(grade);
+      createResult.remarks = remarks;
+      newResults.push(createResult);
+    }
+  });
+
+  try {
+    const newResult = await Result.insertMany(newResults);
+    const result = await Promise.all(
+      toUpdateResults.map(async (item) => {
+        return await item.save();
+      })
+    );
+    return res
+      .status(201)
+      .json(new GenericReponse(201, "Results added", [result, ...newResult]));
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json(new GenericError(500, error?.messag));
+  }
 });
 const getResults = handleAsync(async (req, res) => {
   const { student, class: classId, exam } = req.query;
@@ -592,10 +735,9 @@ const generateLedger = handleAsync(async (req, res) => {
     return res.status(404).json(new GenericError(404, "Exam not found"));
   }
 
-  const results = await Result.find({ exam: examId }).populate(
-    "student.id",
-    "fullName"
-  );
+  const results = await Result.find({ exam: examId, class: classId })
+    .populate("student.id", "fullName")
+    .populate("class", "name section");
 
   //sort the results by rollNo
   results.sort((a, b) => a.student.rollNo - b.student.rollNo);
@@ -614,6 +756,7 @@ const generateLedger = handleAsync(async (req, res) => {
     data["Grade"] = result.grade;
     data["GPA"] = result.gpa;
     data["Remarks"] = result.remarks;
+    data["Marksheet"] = result.url;
     return data;
   });
 
@@ -699,6 +842,7 @@ const getResultsOfStudentIn = handleAsync(async (req, res) => {
 
 export {
   addResult,
+  addResultBulk,
   deleteResult,
   generateLedger,
   getResultById,

@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   addResult,
+  addResultBulk,
   deleteResult,
   generateLedger,
   getResultById,
@@ -14,6 +15,7 @@ import { verifyJWT } from "../middleware/auth.middleware.js";
 const router = Router();
 
 router.route("/").post(verifyJWT, addResult);
+router.route("/bulk/:examId").post(verifyJWT, addResultBulk);
 router.route("/").get(verifyJWT, getResults);
 router.route("/:id").get(verifyJWT, getResultById);
 router.route("/:id").delete(verifyJWT, deleteResult);
