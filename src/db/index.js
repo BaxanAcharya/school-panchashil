@@ -4,7 +4,7 @@ import { DB_NAME } from "../constant.js";
 const connectDB = async () => {
   try {
     const dbConnection = await mongoose.connect(
-      `${process.env.DB_URI}/${DB_NAME}`,
+      `${process.env.DB_URI}/${DB_NAME}?authSource=admin&retryWrites=true&w=majority`,
       {}
     );
     console.log("Connected to database!!! 🎉");

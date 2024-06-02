@@ -191,8 +191,11 @@ const updateCurrentPassword = handleAsync(async (req, res) => {
 
 const currentAdmin = handleAsync(async (req, res) => {
   const admin = await Admin.findById(req?.admin);
-  admin.password = undefined;
-  admin.refreshToken = undefined;
+  if (admin) {
+    admin.password = undefined;
+    admin.refreshToken = undefined;
+  }
+
   res.status(200).json(new GenericReponse(200, "Admin found", { admin }));
 });
 
