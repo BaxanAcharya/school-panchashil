@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import { Class } from "../models/class.model.js";
 import { Student } from "../models/student.model.js";
+import { TransportationArea } from "../models/transportation.model.js";
 import { GenericError } from "../utils/GenericError.js";
 import { GenericReponse } from "../utils/GenericResponse.js";
 import { handleAsync } from "../utils/handleAsync.js";
@@ -8,6 +9,7 @@ import {
   validateAdmissionDate,
   validateClass,
   validateDateOfBirth,
+  validateDestination,
   validateFatherName,
   validateFullName,
   validateGaurdianAddress,
@@ -35,6 +37,7 @@ const addStudent = handleAsync(async (req, res) => {
     gaurdianContactNumber,
     gaurdianProfession,
     class: classId,
+    destination,
   } = req.body;
 
   const fullNameCheck = validateFullName(fullName);
@@ -93,6 +96,20 @@ const addStudent = handleAsync(async (req, res) => {
     return res.status(400).json(new GenericError(400, gaurdianProfessionCheck));
   }
 
+  if (destination) {
+    const isDestination = validateDestination(destination);
+    if (isDestination) {
+      return res.status(400).json(new GenericError(400, isDestination));
+    }
+
+    const destinationCheck = await TransportationArea.findById(destination);
+    if (!destinationCheck) {
+      return res
+        .status(400)
+        .json(new GenericError(400, "Destination not found"));
+    }
+  }
+
   const classCheck = validateClass(classId);
   if (classCheck) {
     return res.status(400).json(new GenericError(400, classCheck));
@@ -117,6 +134,7 @@ const addStudent = handleAsync(async (req, res) => {
     gaurdianContactNumber,
     gaurdianProfession,
     class: classId,
+    destination,
   });
   if (!student) {
     return res
@@ -160,6 +178,7 @@ const updateStudentById = handleAsync(async (req, res) => {
     gaurdianContactNumber,
     gaurdianProfession,
     class: classId,
+    destination,
   } = req.body;
 
   const fullNameCheck = validateFullName(fullName);
@@ -218,6 +237,19 @@ const updateStudentById = handleAsync(async (req, res) => {
     return res.status(400).json(new GenericError(400, gaurdianProfessionCheck));
   }
 
+  if (destination) {
+    const isDestination = validateDestination(destination);
+    if (isDestination) {
+      return res.status(400).json(new GenericError(400, isDestination));
+    }
+
+    const destinationCheck = await TransportationArea.findById(destination);
+    if (!destinationCheck) {
+      return res
+        .status(400)
+        .json(new GenericError(400, "Destination not found"));
+    }
+  }
   const classCheck = validateClass(classId);
   if (classCheck) {
     return res.status(400).json(new GenericError(400, classCheck));
@@ -229,28 +261,33 @@ const updateStudentById = handleAsync(async (req, res) => {
   }
 
   const { id } = req.params;
-  const updatedStudent = await Student.findByIdAndUpdate(
-    id,
-    {
-      $set: {
-        fullName,
-        fatherName,
-        motherName,
-        rollNumber,
-        dateOfBirth,
-        admissionDate,
-        gender,
-        previousSchool,
-        physicalDisability,
-        gaurdianFullName,
-        gaurdianAddress,
-        gaurdianContactNumber,
-        gaurdianProfession,
-        class: classId,
-      },
-    },
-    { new: true }
-  );
+
+  const updateData = {
+    fullName,
+    fatherName,
+    motherName,
+    rollNumber,
+    dateOfBirth,
+    admissionDate,
+    gender,
+    previousSchool,
+    physicalDisability,
+    gaurdianFullName,
+    gaurdianAddress,
+    gaurdianContactNumber,
+    gaurdianProfession,
+    class: classId,
+  };
+
+  if (destination !== undefined) {
+    updateData.destination = destination;
+  } else {
+    updateData.$unset = { destination: "" };
+  }
+
+  const updatedStudent = await Student.findByIdAndUpdate(id, updateData, {
+    new: true,
+  });
 
   if (!updatedStudent) {
     return res.status(500).json(new GenericError(404, "Student not found"));
@@ -294,9 +331,34 @@ const getStudents = handleAsync(async (_, res) => {
       },
     },
     {
+      $lookup: {
+        from: "transportationareas",
+        localField: "destination",
+        foreignField: "_id",
+        as: "destinationValues",
+        pipeline: [
+          {
+            $project: {
+              createdAt: 0,
+              updatedAt: 0,
+              __v: 0,
+            },
+          },
+        ],
+      },
+    },
+    {
+      $addFields: {
+        destinationValues: {
+          $first: "$destinationValues",
+        },
+      },
+    },
+    {
       $project: {
         __v: 0,
         class: 0,
+        destination: 0,
       },
     },
     {
@@ -407,9 +469,34 @@ const getStudentById = handleAsync(async (req, res) => {
       },
     },
     {
+      $lookup: {
+        from: "transportationareas",
+        localField: "destination",
+        foreignField: "_id",
+        as: "destinationValues",
+        pipeline: [
+          {
+            $project: {
+              createdAt: 0,
+              updatedAt: 0,
+              __v: 0,
+            },
+          },
+        ],
+      },
+    },
+    {
+      $addFields: {
+        destinationValues: {
+          $first: "$destinationValues",
+        },
+      },
+    },
+    {
       $project: {
         __v: 0,
         class: 0,
+        destination: 0,
       },
     },
   ]);
@@ -481,9 +568,34 @@ const getStudentByClass = handleAsync(async (req, res) => {
       },
     },
     {
+      $lookup: {
+        from: "transportationareas",
+        localField: "destination",
+        foreignField: "_id",
+        as: "destinationValues",
+        pipeline: [
+          {
+            $project: {
+              createdAt: 0,
+              updatedAt: 0,
+              __v: 0,
+            },
+          },
+        ],
+      },
+    },
+    {
+      $addFields: {
+        destinationValues: {
+          $first: "$destinationValues",
+        },
+      },
+    },
+    {
       $project: {
         __v: 0,
         class: 0,
+        destination: 0,
       },
     },
     {

@@ -7,7 +7,12 @@ const transportationAreaSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    amount: {
+      type: Number,
+      required: true,
+    },
   },
+
   { timestamps: true }
 );
 

@@ -3,13 +3,21 @@ import { TransportationArea } from "../models/transportation.model.js";
 import { GenericError } from "../utils/GenericError.js";
 import { GenericReponse } from "../utils/GenericResponse.js";
 import { handleAsync } from "../utils/handleAsync.js";
-import { validateArea } from "../validation/transportation.validation.js";
+import {
+  validateArea,
+  validateFee,
+} from "../validation/transportation.validation.js";
 
 const addTransportationArea = handleAsync(async (req, res) => {
-  const { name } = req.body;
+  const { name, fee } = req.body;
   const isAreaValid = validateArea(name);
   if (isAreaValid) {
     return res.status(400).json(new GenericError(400, isAreaValid));
+  }
+
+  const isFeeValid = validateFee(fee);
+  if (isFeeValid) {
+    return res.status(400).json(new GenericError(400, isFeeValid));
   }
 
   const area = await TransportationArea.findOne({ name });
@@ -23,6 +31,7 @@ const addTransportationArea = handleAsync(async (req, res) => {
 
   const transportationArea = await TransportationArea.create({
     name,
+    amount: fee,
   });
   if (!transportationArea) {
     return res.status(500).json(new GenericError(500, "Something went wrong"));
@@ -62,10 +71,15 @@ const updateArea = handleAsync(async (req, res) => {
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return res.status(400).json(new GenericError(400, "Invalid Id"));
   }
-  const { name } = req.body;
+  const { name, fee } = req.body;
   const isAreaValid = validateArea(name);
   if (isAreaValid) {
     return res.status(400).json(new GenericError(400, isAreaValid));
+  }
+
+  const isFeeValid = validateFee(fee);
+  if (isFeeValid) {
+    return res.status(400).json(new GenericError(400, isFeeValid));
   }
 
   const area = await TransportationArea.findById(id);
@@ -74,7 +88,7 @@ const updateArea = handleAsync(async (req, res) => {
   }
   const updatedArea = await TransportationArea.findByIdAndUpdate(
     id,
-    { name },
+    { name, amount: fee },
     { new: true }
   );
   res

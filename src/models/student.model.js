@@ -65,14 +65,15 @@ const studentSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-    vechileRoute: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "TransportationFee",
-      required: false,
-    },
+
     class: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Class",
+    },
+    destination: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "TransportationArea",
+      required: false,
     },
     hasLeft: {
       type: Boolean,

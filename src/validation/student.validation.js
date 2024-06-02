@@ -81,10 +81,18 @@ const validateClass = (classId) => {
   }
 };
 
+const validateDestination = (destination) => {
+  const isValid = mongoose.Types.ObjectId.isValid(destination);
+  if (!isValid) {
+    return "Destination is not valid";
+  }
+};
+
 export {
   validateAdmissionDate,
   validateClass,
   validateDateOfBirth,
+  validateDestination,
   validateFatherName,
   validateFullName,
   validateGaurdianAddress,
