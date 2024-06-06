@@ -38,6 +38,8 @@ const addStudent = handleAsync(async (req, res) => {
     gaurdianProfession,
     class: classId,
     destination,
+    feeDiscount,
+    transportFeeDiscount,
   } = req.body;
 
   const fullNameCheck = validateFullName(fullName);
@@ -135,6 +137,8 @@ const addStudent = handleAsync(async (req, res) => {
     gaurdianProfession,
     class: classId,
     destination,
+    feeDiscount: feeDiscount || 0,
+    transportFeeDiscount: !destination ? 0 : transportFeeDiscount || 0,
   });
   if (!student) {
     return res
@@ -179,6 +183,8 @@ const updateStudentById = handleAsync(async (req, res) => {
     gaurdianProfession,
     class: classId,
     destination,
+    feeDiscount,
+    transportFeeDiscount,
   } = req.body;
 
   const fullNameCheck = validateFullName(fullName);
@@ -277,6 +283,8 @@ const updateStudentById = handleAsync(async (req, res) => {
     gaurdianContactNumber,
     gaurdianProfession,
     class: classId,
+    feeDiscount: feeDiscount || 0,
+    transportFeeDiscount: !destination ? 0 : transportFeeDiscount || 0,
   };
 
   if (destination !== undefined) {

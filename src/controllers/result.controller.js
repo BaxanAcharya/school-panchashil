@@ -217,11 +217,12 @@ const addResultBulk = handleAsync(async (req, res) => {
         (total, subject) => total + subject.fullMarks,
         0
       );
-      isAvaliable.total = totalSubjectMarks;
+
       const totalMarksObtained = isAvaliable.marks.reduce(
         (total, subject) => total + subject.mark,
         0
       );
+      isAvaliable.total = totalMarksObtained;
       const roundedPercentage = (totalMarksObtained / totalSubjectMarks) * 100;
       const percentage =
         roundedPercentage % 1 === 0
@@ -263,11 +264,12 @@ const addResultBulk = handleAsync(async (req, res) => {
         (total, subject) => total + subject.fullMarks,
         0
       );
-      createResult.total = totalSubjectMarks;
+
       const totalMarksObtained = createResult.marks.reduce(
         (total, subject) => total + subject.mark,
         0
       );
+      createResult.total = totalMarksObtained;
       const roundedPercentage = (totalMarksObtained / totalSubjectMarks) * 100;
       const percentage =
         roundedPercentage % 1 === 0
@@ -755,8 +757,6 @@ const generateLedger = handleAsync(async (req, res) => {
     data["Percentage"] = result.percentage;
     data["Grade"] = result.grade;
     data["GPA"] = result.gpa;
-    data["Remarks"] = result.remarks;
-    data["Marksheet"] = result.url;
     return data;
   });
 

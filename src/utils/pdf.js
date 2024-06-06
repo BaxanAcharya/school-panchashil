@@ -8,13 +8,13 @@ const generatePDF = async (html, outputPath) => {
   if (CHROME_PATH) {
     browser = await puppeteer.launch({
       args: ["--no-sandbox", "--disable-setuid-sandbox"],
-      headless: true,
+      headless: "new",
       executablePath: CHROME_PATH,
     });
   } else {
     browser = await puppeteer.launch({
       args: ["--no-sandbox", "--disable-setuid-sandbox"],
-      headless: true,
+      headless: "new",
     });
   }
 

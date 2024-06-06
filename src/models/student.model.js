@@ -65,7 +65,6 @@ const studentSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-
     class: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Class",
@@ -78,6 +77,15 @@ const studentSchema = new mongoose.Schema(
     hasLeft: {
       type: Boolean,
       default: false,
+    },
+
+    feeDiscount: {
+      type: Number,
+      default: 0,
+    },
+    transportFeeDiscount: {
+      type: Number,
+      default: 0,
     },
   },
   { timestamps: true }
