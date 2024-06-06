@@ -4,7 +4,7 @@ import { fileURLToPath } from "url";
 import Bill from "../models/bill.model.js";
 import { Fee } from "../models/fee.model.js";
 import { Student } from "../models/student.model.js";
-import { TransportationFee } from "../models/transportationFee.js";
+import { TransportationArea } from "../models/transportation.model.js";
 import { GenericError } from "../utils/GenericError.js";
 import { GenericReponse } from "../utils/GenericResponse.js";
 import { uplaodOnBucket } from "../utils/bucket.js";
@@ -73,19 +73,22 @@ const addBill = handleAsync(async (req, res) => {
 
   let transportation = 0;
 
-  if (isStudent.vechileRoute) {
-    const transportationFee = TransportationFee.findById(student.vechileRoute);
-    if (!transportationFee) {
+  if (isStudent.destination) {
+    const transportationArea = await TransportationArea.findById(
+      isStudent.destination
+    );
+    if (!transportationArea) {
       return res
         .status(400)
         .json(
           new GenericError(
             400,
-            `Transportation fee for student ${isStudent.fullName} not found`
+            `Transportation area of student ${isStudent.fullName} not found`
           )
         );
     }
-    transportation = transportationFee.fee;
+
+    transportation = transportationArea.amount;
   }
 
   const isFee = await Fee.findOne({
@@ -94,7 +97,7 @@ const addBill = handleAsync(async (req, res) => {
   if (!isFee) {
     return res
       .status(400)
-      .json(new GenericError(400, `Fee for class ${classId} not found`));
+      .json(new GenericError(400, `Fee for this student class not found`));
   }
 
   const isBill = await Bill.findOne({
@@ -177,6 +180,7 @@ const addBill = handleAsync(async (req, res) => {
   total += deposit || 0;
   total += snack || 0;
   total += transportation;
+
   total += evaluation || 0;
   total += care || 0;
   total += due || 0;
@@ -233,6 +237,26 @@ const getBills = handleAsync(async (req, res) => {
   return res
     .status(200)
     .json(new GenericReponse(200, "Bills Fetched Successfully", bills));
+});
+
+const getBillsOfStudent = handleAsync(async (req, res) => {
+  const { id } = req.params;
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json(new GenericError(400, "Invalid Student Id"));
+  }
+  const sutdentsBills = await Bill.find({ "student.id": id })
+    .populate("student.id", "fullName")
+    .populate("student.class", "name");
+
+  return res
+    .status(200)
+    .json(
+      new GenericReponse(
+        200,
+        "Student Bills Fetched Successfully",
+        sutdentsBills
+      )
+    );
 });
 const getBill = handleAsync(async (req, res) => {
   const { id } = req.params;
@@ -427,7 +451,7 @@ const printBill = handleAsync(async (req, res) => {
   if (isBill.url) {
     return res
       .status(200)
-      .json(new GenericReponse(200, "Bill Printed Successfully", isBill));
+      .json(new GenericReponse(200, "Bill Printed Successfully", isBill.url));
   }
 
   const listOfFees = [];
@@ -613,7 +637,7 @@ const printBill = handleAsync(async (req, res) => {
       await isBill.save();
       res
         .status(200)
-        .json(new GenericReponse(200, "Bill Printed Successfully", isBill));
+        .json(new GenericReponse(200, "Bill Printed Successfully", isBill.url));
     })
     .catch((err) => {
       res
@@ -624,4 +648,12 @@ const printBill = handleAsync(async (req, res) => {
     });
 });
 
-export { addBill, deleteBill, getBill, getBills, printBill, updateBill };
+export {
+  addBill,
+  deleteBill,
+  getBill,
+  getBills,
+  getBillsOfStudent,
+  printBill,
+  updateBill,
+};

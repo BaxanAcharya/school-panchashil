@@ -11,7 +11,6 @@ import resultRouter from "./routes/result.route.js";
 import studentRouter from "./routes/student.route.js";
 import subjectRouter from "./routes/subject.route.js";
 import transportationAreaRouter from "./routes/transportationArea.route.js";
-import transportationFeeRouter from "./routes/transportationFee.route.js";
 
 const app = express();
 app.use(
@@ -41,6 +40,5 @@ app.use(`${API_PREFIX}/fee`, feeRouter);
 app.use(`${API_PREFIX}/exam`, examRouter);
 app.use(`${API_PREFIX}/result`, resultRouter);
 app.use(`${API_PREFIX}/transportationArea`, transportationAreaRouter);
-app.use(`${API_PREFIX}/transportationFee`, transportationFeeRouter);
 app.use(`${API_PREFIX}/bill`, billRouter);
 export { app };
