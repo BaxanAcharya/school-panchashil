@@ -46,9 +46,8 @@ const addBill = handleAsync(async (req, res) => {
     serviceFee,
     stationaryFee,
     deposit,
-    snack,
     evaluation,
-    care,
+    extra,
     due,
     diary,
   } = req.body;
@@ -87,8 +86,10 @@ const addBill = handleAsync(async (req, res) => {
           )
         );
     }
-
     transportation = transportationArea.amount;
+    if (isStudent.transportFeeDiscount > 0 && transportation > 0) {
+      transportation -= isStudent.transportFeeDiscount;
+    }
   }
 
   const isFee = await Fee.findOne({
@@ -116,6 +117,11 @@ const addBill = handleAsync(async (req, res) => {
       );
   }
 
+  let schoolFee = isFee.feeAmount || 0;
+  if (isStudent.feeDiscount > 0 && schoolFee > 0) {
+    schoolFee -= isStudent.feeDiscount;
+  }
+
   const billToSave = {
     date: new Date(),
     student: {
@@ -127,62 +133,48 @@ const addBill = handleAsync(async (req, res) => {
     year,
     admissionFee: {
       amount: admissionFee || 0,
-      note: "Admission Fee (Yearly for new student only)",
     },
     serviceFee: {
       amount: serviceFee || 0,
-      note: "Project/Sport/First Aid/Extra Curricular Fee (Yearly)",
     },
     schoolFee: {
-      amount: isFee.feeAmount || 0,
-      note: "School Fee (Monthly)",
+      amount: schoolFee || 0,
     },
     stationaryFee: {
       amount: stationaryFee || 0,
-      note: "Stationary Fee (Monthly)",
     },
     deposit: {
       amount: deposit || 0,
-      note: "Deposit (Refundable)",
     },
-    snack: {
-      amount: snack || 0,
-      note: "Snack (Monthly)",
-    },
+
     transportation: {
       amount: transportation || 0,
-      note: "Transportation Fee (Monthly)",
     },
     evaluation: {
       amount: evaluation || 0,
-      note: "Evaluation Fee (Yearly)",
     },
-    care: {
-      amount: care || 0,
-      note: "Care Fee (Monthly)",
+    extra: {
+      extra: extra || 0,
     },
 
     due: {
       amount: due || 0,
-      note: "Due Fee (Monthly)",
     },
     diary: {
       amount: diary || 0,
-      note: "Diary Fee (Yearly)",
     },
   };
 
   let total = 0;
   total += admissionFee || 0;
   total += serviceFee || 0;
-  total += isFee.feeAmount || 0;
+  total += schoolFee || 0;
   total += stationaryFee || 0;
   total += deposit || 0;
-  total += snack || 0;
   total += transportation;
 
   total += evaluation || 0;
-  total += care || 0;
+  total += extra || 0;
   total += due || 0;
   total += diary || 0;
 
@@ -203,6 +195,209 @@ const addBill = handleAsync(async (req, res) => {
   return res
     .status(201)
     .json(new GenericReponse(201, "Bill Created Successfully", bill));
+});
+
+const addBulkBill = handleAsync(async (req, res) => {
+  const { year, month } = req.params;
+  if (!Array.isArray(req.body)) {
+    return res
+      .status(400)
+      .json(new GenericError(400, "Body should be an array"));
+  }
+
+  const studentIds = req.body.map(({ id }) => {
+    return id;
+  });
+
+  if (!studentIds) {
+    return res
+      .status(400)
+      .json(new GenericError(400, "Student Ids are required"));
+  }
+
+  const students = await Student.find({ _id: { $in: studentIds } });
+  if (students.length != req.body.length) {
+    return res.status(404).json(new GenericError(404, "Students not found"));
+  }
+
+  const transporationFees = students.map((s) => {
+    if (s.destination) {
+      return s.destination;
+    }
+  });
+
+  const transportationAreas = await TransportationArea.find({
+    _id: { $in: transporationFees },
+  });
+
+  const availableBills = await Bill.find({
+    year,
+    month,
+    "student.id": { $in: studentIds },
+  });
+
+  const newBills = [];
+  const toUpdateBills = [];
+
+  const isFee = await Fee.findOne({
+    class: students[0].class,
+  });
+  if (!isFee) {
+    return res
+      .status(400)
+      .json(new GenericError(400, `Fee for the student class not found`));
+  }
+
+  const lastBill = await Bill.findOne({}, {}, { sort: { _id: -1 } });
+
+  let billNo = 1;
+  if (lastBill) {
+    billNo = lastBill.billNo + 1;
+  }
+
+  req.body.forEach(async (item) => {
+    const { id, data } = item;
+
+    const isAvaliable =
+      availableBills.find((bill) => {
+        return bill.student.id.toString() === id;
+      }) || null;
+
+    const student = students.find((student) => student._id.toString() == id);
+    let transportation = 0;
+    if (student.destination) {
+      var fees = transportationAreas.find(
+        (area) => area._id.toString() == student.destination
+      );
+      transportation = fees ? fees.amount : 0;
+      if (student.transportFeeDiscount > 0 && transportation > 0) {
+        transportation -= student.transportFeeDiscount;
+      }
+    }
+
+    let schoolFee = isFee.feeAmount || 0;
+    if (student.feeDiscount > 0 && schoolFee > 0) {
+      schoolFee -= student.feeDiscount;
+    }
+    if (isAvaliable) {
+      let total = 0;
+      isAvaliable.admissionFee.amount = data.admissionFee;
+      total += data.admissionFee;
+      isAvaliable.serviceFee.amount = data.serviceFee;
+      total += data.serviceFee;
+      isAvaliable.schoolFee.amount = schoolFee;
+      total += schoolFee;
+      isAvaliable.transportation.amount = transportation;
+      total += transportation;
+      isAvaliable.stationaryFee.amount = data.stationaryFee;
+      total += data.stationaryFee;
+      isAvaliable.deposit.amount = data.deposit;
+      total += data.deposit;
+      isAvaliable.evaluation.amount = data.evaluation;
+      total += data.evaluation;
+      isAvaliable.extra.amount = data.extra;
+      total += data.extra;
+      isAvaliable.due.amount = data.due;
+      total += data.due;
+      isAvaliable.diary.amount = data.diary;
+      total += data.diary;
+      isAvaliable.total = total;
+      isAvaliable.url = null;
+      isAvaliable.isPaid = data.isPaid;
+      toUpdateBills.push(isAvaliable);
+    } else {
+      const createBill = new Bill({
+        billNo: billNo,
+        date: new Date(),
+        student: {
+          id,
+          class: students[0].class,
+          rollNo: s.rollNumber,
+        },
+        month,
+        year,
+        admissionFee: {
+          amount: data.admissionFee,
+        },
+        serviceFee: {
+          amount: data.serviceFee,
+        },
+
+        schoolFee: {
+          amount: schoolFee,
+        },
+        stationaryFee: {
+          amount: data.stationaryFee,
+        },
+        deposit: {
+          amount: data.deposit,
+        },
+
+        transportation: {
+          amount: transportation,
+        },
+        evaluation: {
+          amount: data.evaluation,
+        },
+        extra: {
+          amount: data.extra,
+        },
+        due: {
+          amount: data.due,
+        },
+        diary: {
+          amount: data.diary,
+        },
+        url: null,
+        isPaid: data.isPaid,
+      });
+
+      createBill.total =
+        createBill.admissionFee.amount +
+        createBill.serviceFee.amount +
+        createBill.schoolFee.amount +
+        createBill.stationaryFee.amount +
+        createBill.deposit.amount +
+        createBill.transportation.amount +
+        createBill.evaluation.amount +
+        createBill.extra.amount +
+        createBill.due.amount +
+        createBill.diary.amount;
+      billNo++;
+      newBills.push(createBill);
+    }
+  });
+
+  try {
+    let savedBills = [];
+    if (newBills.length > 0) {
+      savedBills = await Bill.insertMany(newBills);
+    }
+    let updatedBills = [];
+
+    if (toUpdateBills.length > 0) {
+      updatedBills = await Promise.all(
+        toUpdateBills.map(async (bill) => {
+          return await Bill.findByIdAndUpdate(bill._id, {
+            ...bill,
+          });
+        })
+      );
+    }
+
+    return res
+
+      .status(201)
+      .json(
+        new GenericReponse(
+          201,
+          "Bills Created Successfully",
+          savedBills.concat(updatedBills)
+        )
+      );
+  } catch (error) {
+    return res.status(500).json(new GenericError(500, error?.messag));
+  }
 });
 
 const getBills = handleAsync(async (req, res) => {
@@ -282,11 +477,11 @@ const updateBill = handleAsync(async (req, res) => {
     serviceFee,
     stationaryFee,
     deposit,
-    snack,
     evaluation,
-    care,
+    extra,
     due,
     diary,
+    isPaid,
   } = req.body;
 
   const { id } = req.params;
@@ -298,11 +493,53 @@ const updateBill = handleAsync(async (req, res) => {
   if (!isBill) {
     return res.status(404).json(new GenericError(404, "Bill not found"));
   }
+
+  const isStudent = await Student.findById(isBill.student.id);
+  if (!isStudent) {
+    return res
+      .status(400)
+      .json(new GenericError(400, "Student not found For this bill"));
+  }
+
+  const isFee = await Fee.findOne({
+    class: isStudent.class,
+  });
+  if (!isFee) {
+    return res
+      .status(400)
+      .json(new GenericError(400, `Fee for this student class not found`));
+  }
+
+  let transportation = 0;
+  if (isStudent.destination) {
+    const transportationArea = await TransportationArea.findById(
+      isStudent.destination
+    );
+    if (!transportationArea) {
+      return res
+        .status(400)
+        .json(
+          new GenericError(
+            400,
+            `Transportation area of student ${isStudent.fullName} not found`
+          )
+        );
+    }
+    transportation = transportationArea.amount;
+    if (isStudent.transportFeeDiscount > 0 && transportation > 0) {
+      transportation -= isStudent.transportFeeDiscount;
+    }
+  }
+
+  let schoolFee = isFee.feeAmount || 0;
+  if (isStudent.feeDiscount > 0 && schoolFee > 0) {
+    schoolFee -= isStudent.feeDiscount;
+  }
+
   const toUpdate = {};
   if (admissionFee !== null && admissionFee !== undefined) {
     toUpdate.admissionFee = {
       amount: admissionFee,
-      note: "Admission Fee (Yearly for new student only)",
     };
   } else {
     toUpdate.admissionFee = isBill.admissionFee;
@@ -310,7 +547,6 @@ const updateBill = handleAsync(async (req, res) => {
   if (serviceFee !== null && serviceFee !== undefined) {
     toUpdate.serviceFee = {
       amount: serviceFee,
-      note: "Project/Sport/First Aid/Extra Curricular Fee (Yearly)",
     };
   } else {
     toUpdate.serviceFee = isBill.serviceFee;
@@ -318,7 +554,6 @@ const updateBill = handleAsync(async (req, res) => {
   if (stationaryFee !== null && stationaryFee !== undefined) {
     toUpdate.stationaryFee = {
       amount: stationaryFee,
-      note: "Stationary Fee (Monthly)",
     };
   } else {
     toUpdate.stationaryFee = isBill.stationaryFee;
@@ -326,19 +561,11 @@ const updateBill = handleAsync(async (req, res) => {
   if (deposit !== null && deposit !== undefined) {
     toUpdate.deposit = {
       amount: deposit,
-      note: "Deposit (Refundable)",
     };
   } else {
     toUpdate.deposit = isBill.deposit;
   }
-  if (snack !== null && snack !== undefined) {
-    toUpdate.snack = {
-      amount: snack,
-      note: "Snack (Monthly)",
-    };
-  } else {
-    toUpdate.snack = isBill.snack;
-  }
+
   if (evaluation !== null && evaluation !== undefined) {
     toUpdate.evaluation = {
       amount: evaluation,
@@ -347,18 +574,16 @@ const updateBill = handleAsync(async (req, res) => {
   } else {
     toUpdate.evaluation = isBill.evaluation;
   }
-  if (care !== null && care !== undefined) {
-    toUpdate.care = {
-      amount: care,
-      note: "Care Fee (Monthly)",
+  if (extra !== null && extra !== undefined) {
+    toUpdate.extra = {
+      amount: extra,
     };
   } else {
-    toUpdate.care = isBill.care;
+    toUpdate.extra = isBill.extra;
   }
   if (due !== null && due !== undefined) {
     toUpdate.due = {
       amount: due,
-      note: "Due Fee (Monthly)",
     };
   } else {
     toUpdate.due = isBill.due;
@@ -366,14 +591,19 @@ const updateBill = handleAsync(async (req, res) => {
   if (diary !== null && diary !== undefined) {
     toUpdate.diary = {
       amount: diary,
-      note: "Diary Fee (Yearly)",
     };
   } else {
     toUpdate.diary = isBill.diary;
   }
 
-  toUpdate.total = 0;
+  toUpdate.transportation = {
+    amount: transportation,
+  };
+  toUpdate.schoolFee = {
+    amount: schoolFee,
+  };
 
+  toUpdate.total = 0;
   toUpdate.total +=
     admissionFee != !null && admissionFee !== undefined
       ? admissionFee
@@ -382,26 +612,25 @@ const updateBill = handleAsync(async (req, res) => {
     serviceFee !== null && serviceFee !== undefined
       ? serviceFee
       : isBill.serviceFee.amount;
-  toUpdate.total += isBill.schoolFee.amount;
+  toUpdate.total += schoolFee;
   toUpdate.total +=
     stationaryFee !== null && stationaryFee !== undefined
       ? stationaryFee
       : isBill.stationaryFee.amount;
   toUpdate.total +=
     deposit !== null && deposit !== undefined ? deposit : isBill.deposit.amount;
-  toUpdate.total +=
-    snack !== null && snack !== undefined ? snack : isBill.snack.amount;
-  toUpdate.total += isBill.transportation.amount;
+  toUpdate.total += transportation;
   toUpdate.total +=
     evaluation != null && evaluation !== undefined
       ? evaluation
       : isBill.evaluation.amount;
   toUpdate.total +=
-    care != null && care !== undefined ? care : isBill.care.amount;
+    extra != null && extra !== undefined ? extra : isBill.care.extra;
   toUpdate.total += due != null && due !== undefined ? due : isBill.due.amount;
   toUpdate.total +=
     diary != null && diary !== undefined ? diary : isBill.diary.amount;
   toUpdate.url = null;
+  toUpdate.isPaid = isPaid;
 
   const updatedBill = await Bill.findByIdAndUpdate(
     id,
@@ -460,10 +689,9 @@ const printBill = handleAsync(async (req, res) => {
   listOfFees.push(isBill.schoolFee);
   listOfFees.push(isBill.stationaryFee);
   listOfFees.push(isBill.deposit);
-  listOfFees.push(isBill.snack);
   listOfFees.push(isBill.transportation);
   listOfFees.push(isBill.evaluation);
-  listOfFees.push(isBill.care);
+  listOfFees.push(isBill.extra);
   listOfFees.push(isBill.due);
   listOfFees.push(isBill.diary);
 
@@ -528,7 +756,7 @@ const printBill = handleAsync(async (req, res) => {
         .footer {
           margin-top: 20px;
           text-align: center;
-          color: #888;
+          color: #010000;
         }
   
         .monthly-bill-info {
@@ -562,12 +790,21 @@ const printBill = handleAsync(async (req, res) => {
           style="object-fit: contain"
           alt="School Rectangle Logo"
         />
-        <p style="text-align: center">
+        ${
+          isBill.isPaid
+            ? `<h1 style="text-align: center;">Cash Bill</h1>`
+            : `<h1 style="text-align: center;">Information Bill</h1>`
+        }
+        ${
+          isBill.isPaid &&
+          `<p style="text-align: center">
           Bill Number:
           <span style="font-weight: bold"
             >#${isBill.billNo}</span
           >
-        </p>
+        </p>`
+        }
+        
         <div class="student-info">
           <div>
             <p><strong>Student Name:</strong> ${isBill.student.id.fullName}</p>
@@ -647,13 +884,60 @@ const printBill = handleAsync(async (req, res) => {
         );
     });
 });
+const getBillsOfStudentIn = handleAsync(async (req, res) => {
+  const { year, month } = req.params;
+  const { studentIds } = req.query;
+
+  if (!studentIds) {
+    return res
+      .status(400)
+      .json(new GenericError(400, "Student Ids are required"));
+  }
+
+  let students = [];
+  if (Array.isArray(studentIds)) {
+    students = studentIds;
+  } else {
+    students = studentIds.split(",");
+  }
+
+  if (!Array.isArray(students)) {
+    return res
+      .status(400)
+      .json(new GenericError(400, "Student ids should be an array"));
+  }
+
+  students.forEach((id) => {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res
+        .status(400)
+        .json(new GenericError(400, `Invalid student id ${id}`));
+    }
+  });
+
+  const results = await Bill.find({
+    year,
+    month,
+    "student.id": { $in: students },
+  }).populate("student.id", "fullName");
+
+  if (!results) {
+    return res.status(404).json(new GenericError(500, "No bills found"));
+  }
+
+  return res
+    .status(200)
+    .json(new GenericReponse(200, "Bills Fetched Successfully", results));
+});
 
 export {
   addBill,
+  addBulkBill,
   deleteBill,
   getBill,
   getBills,
   getBillsOfStudent,
+  getBillsOfStudentIn,
   printBill,
   updateBill,
 };

@@ -44,7 +44,7 @@ const billSchema = new mongoose.Schema(
       },
       note: {
         type: String,
-        default: "Admission Fee (Yearly for new student only)",
+        default: "Admission Fee (For new student only)",
       },
     },
     serviceFee: {
@@ -55,7 +55,7 @@ const billSchema = new mongoose.Schema(
       },
       note: {
         type: String,
-        default: "Project/Sport/First Aid/Extra Curricular Fee (Yearly)",
+        default: "Project/Sport/First Aid/Service Fee (Yearly)",
       },
     },
     schoolFee: {
@@ -77,7 +77,7 @@ const billSchema = new mongoose.Schema(
       },
       note: {
         type: String,
-        default: "Stationary Fee (Monthly)",
+        default: "Stationary Fee (Monthly/Yearly)",
       },
     },
     deposit: {
@@ -91,17 +91,6 @@ const billSchema = new mongoose.Schema(
         default: "Deposit (Refundable)",
       },
     },
-    snack: {
-      amount: {
-        type: Number,
-        required: false,
-        default: 0,
-      },
-      note: {
-        type: String,
-        default: "Snack (Monthly)",
-      },
-    },
     transportation: {
       amount: {
         type: Number,
@@ -110,7 +99,7 @@ const billSchema = new mongoose.Schema(
       },
       note: {
         type: String,
-        default: "Transportation Fee (Monthly)",
+        default: "Transportation Fee",
       },
     },
     evaluation: {
@@ -124,7 +113,7 @@ const billSchema = new mongoose.Schema(
         default: "Evaluation (Term/unit wise)",
       },
     },
-    care: {
+    extra: {
       amount: {
         type: Number,
         required: false,
@@ -132,7 +121,7 @@ const billSchema = new mongoose.Schema(
       },
       note: {
         type: String,
-        default: "Care/Day Hotel (Monthly) Fee",
+        default: "Extra Curricular Activities",
       },
     },
     due: {
@@ -164,6 +153,12 @@ const billSchema = new mongoose.Schema(
     url: {
       type: String,
       required: false,
+    },
+
+    isPaid: {
+      type: Boolean,
+      required: true,
+      default: false,
     },
   },
   { timestamps: true }
