@@ -796,13 +796,14 @@ const printBill = handleAsync(async (req, res) => {
             : `<h1 style="text-align: center;">Information Bill</h1>`
         }
         ${
-          isBill.isPaid &&
-          `<p style="text-align: center">
+          isBill.isPaid
+            ? `<p style="text-align: center">
           Bill Number:
           <span style="font-weight: bold"
             >#${isBill.billNo}</span
           >
         </p>`
+            : ""
         }
         
         <div class="student-info">
