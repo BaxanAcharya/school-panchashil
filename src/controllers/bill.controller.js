@@ -311,8 +311,8 @@ const addBulkBill = handleAsync(async (req, res) => {
         date: new Date(),
         student: {
           id,
-          class: students[0].class,
-          rollNo: s.rollNumber,
+          class: student.class,
+          rollNo: student.rollNumber,
         },
         month,
         year,
