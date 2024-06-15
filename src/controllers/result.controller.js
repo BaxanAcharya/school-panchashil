@@ -532,6 +532,12 @@ const printMarkSheet = handleAsync(async (req, res) => {
           text-align: right;
           color: #888;
         }
+
+        .divider {
+          height: 2px; 
+          border: none; 
+          background-color: black;
+        }
       </style>
     </head>
     <body>
@@ -578,7 +584,7 @@ const printMarkSheet = handleAsync(async (req, res) => {
             <p><strong> Roll No:</strong> ${result.student.rollNo}</p>
           </div>
         </div>
-        <hr />
+        <hr class="divider" />
         <div style="display: flex">
           <table>
             <thead>
@@ -667,7 +673,7 @@ const printMarkSheet = handleAsync(async (req, res) => {
         <div class="total">
           <p><strong>Total Marks Obtained:</strong> ${result.total}</p>
         </div>
-        <hr />
+        <hr class="divider"/>
         <div class="student-info">
           <div>
             <p><strong>GPA:</strong> ${result.gpa}</p>
@@ -683,7 +689,7 @@ const printMarkSheet = handleAsync(async (req, res) => {
           </div>
         </div>
   
-        <div class="student-info">
+        <div class="student-info" style="-20px">
           <div>
             <p>----------------</p>
             <p style="margin-top: 0px">Class Teacher</p>
