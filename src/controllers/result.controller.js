@@ -570,7 +570,7 @@ const printMarkSheet = handleAsync(async (req, res) => {
         >
           Student's Progress Report
         </p>
-        <div class="student-info">
+        <div class="student-info" style="margin-top:-15px;">
           <div>
             <p><strong> Name:</strong> ${result.student.id.fullName}</p>
             <p><strong>Class:</strong> ${result.class.name} ${
@@ -689,15 +689,9 @@ const printMarkSheet = handleAsync(async (req, res) => {
           </div>
         </div>
   
-        <div class="student-info" style="-20px">
-          <div>
-            <p>----------------</p>
+        <div class="student-info" style="margin-top:-10px;">
             <p style="margin-top: 0px">Class Teacher</p>
-          </div>
-          <div>
-            <p>----------------</p>
             <p style="margin-top: 0px">Principal</p>
-          </div>
         </div>
       </div>
     </body>
