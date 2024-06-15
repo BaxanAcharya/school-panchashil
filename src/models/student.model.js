@@ -87,6 +87,22 @@ const studentSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    isNew: {
+      type: Boolean,
+      default: false,
+    },
+    dueAmount: {
+      type: Number,
+      default: 0,
+    },
+    admissionDiscount: {
+      type: Number,
+      default: 0,
+    },
+    stationaryFeeDiscount: {
+      type: Number,
+      default: 0,
+    },
   },
   { timestamps: true }
 );

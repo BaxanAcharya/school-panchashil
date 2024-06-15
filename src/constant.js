@@ -11,3 +11,11 @@ export const PASSWORD = "password";
 export const SECTION_LIST = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"];
 export const GENDER_LIST = ["Male", "Female", "Other"];
 export const NEPALI_MONTHS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+export const BILL_FEE_LIST = [
+  "Admission Fee",
+  "Service Fee",
+  "Stationary Fee",
+  "Deposit",
+  "Evaluation Fee",
+  "Diary/ID Card",
+];
