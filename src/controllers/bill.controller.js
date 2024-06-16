@@ -1,7 +1,9 @@
 import mongoose from "mongoose";
 import path from "path";
 import { fileURLToPath } from "url";
+import { BILL_FEE_LIST } from "../constant.js";
 import Bill from "../models/bill.model.js";
+import billFeeModel from "../models/billFee.model.js";
 import { Fee } from "../models/fee.model.js";
 import { Student } from "../models/student.model.js";
 import { TransportationArea } from "../models/transportation.model.js";
@@ -895,18 +897,28 @@ const getBillsOfStudentIn = handleAsync(async (req, res) => {
       .json(new GenericError(400, "Student Ids are required"));
   }
 
-  let students = [];
+  let studentsIncoming = [];
   if (Array.isArray(studentIds)) {
-    students = studentIds;
+    studentsIncoming = studentIds;
   } else {
-    students = studentIds.split(",");
+    studentsIncoming = studentIds.split(",");
   }
 
-  if (!Array.isArray(students)) {
+  if (!Array.isArray(studentsIncoming)) {
     return res
       .status(400)
       .json(new GenericError(400, "Student ids should be an array"));
   }
+
+  const students = [];
+  studentsIncoming.forEach((id) => {
+    const s = students.find((s) => {
+      return s.toString() === id;
+    });
+    if (!s) {
+      students.push(id);
+    }
+  });
 
   students.forEach((id) => {
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -916,19 +928,146 @@ const getBillsOfStudentIn = handleAsync(async (req, res) => {
     }
   });
 
-  const results = await Bill.find({
-    year,
-    month,
-    "student.id": { $in: students },
-  }).populate("student.id", "fullName");
-
-  if (!results) {
-    return res.status(404).json(new GenericError(500, "No bills found"));
+  const studentRes = await Student.find({ _id: { $in: students } });
+  if (students.length != studentRes.length) {
+    return res.status(404).json(new GenericError(404, "Students not found"));
   }
 
-  return res
-    .status(200)
-    .json(new GenericReponse(200, "Bills Fetched Successfully", results));
+  const transportationAreas = [];
+  studentRes.forEach((s) => {
+    const t = transportationAreas.find((area) => {
+      return area.toString() === s.destination.toString();
+    });
+    if (!t) {
+      transportationAreas.push(s.destination);
+    }
+  });
+
+  const transportationFees = await TransportationArea.find({
+    _id: { $in: transportationAreas },
+  });
+
+  if (transportationAreas.length != transportationFees.length) {
+    return res
+      .status(404)
+      .json(new GenericError(404, "Transportation Fees not found"));
+  }
+
+  const classes = [];
+  studentRes.forEach((s) => {
+    const c = classes.find((c) => {
+      return c.toString() === s.class.toString();
+    });
+    if (!c) {
+      classes.push(s.class);
+    }
+  });
+
+  const classFees = await Fee.find({ class: { $in: classes } });
+  if (classes.length != classFees.length) {
+    return res.status(404).json(new GenericError(404, "Fees not found"));
+  }
+
+  const admissionFee = await billFeeModel.findOne({
+    name: BILL_FEE_LIST[0],
+  });
+
+  if (!admissionFee) {
+    return res
+      .status(404)
+      .json(new GenericError(404, `${BILL_FEE_LIST[0]} not found`));
+  }
+
+  const serviceFee = await billFeeModel.findOne({
+    name: BILL_FEE_LIST[1],
+  });
+  if (!serviceFee) {
+    return res
+      .status(404)
+      .json(new GenericError(404, `${BILL_FEE_LIST[1]} not found`));
+  }
+
+  const stationaryFee = await billFeeModel.find({
+    class: { $in: classes },
+    name: BILL_FEE_LIST[2],
+  });
+
+  if (classes.length != stationaryFee.length) {
+    return res
+      .status(404)
+      .json(new GenericError(404, `${BILL_FEE_LIST[2]} not found`));
+  }
+
+  const deposit = await billFeeModel.findOne({
+    name: BILL_FEE_LIST[3],
+  });
+
+  if (!deposit) {
+    return res
+      .status(404)
+      .json(new GenericError(404, `${BILL_FEE_LIST[3]} not found`));
+  }
+
+  const evaluation = await billFeeModel.findOne({
+    name: BILL_FEE_LIST[4],
+  });
+
+  if (!evaluation) {
+    return res
+      .status(404)
+      .json(new GenericError(404, `${BILL_FEE_LIST[4]} not found`));
+  }
+
+  const diary = await billFeeModel.findOne({
+    name: BILL_FEE_LIST[5],
+  });
+
+  if (!diary) {
+    return res
+      .status(404)
+      .json(new GenericError(404, `${BILL_FEE_LIST[5]} not found`));
+  }
+
+  const billFees = {
+    admissionFee,
+    serviceFee,
+    stationaryFee,
+    deposit,
+    evaluation,
+    diary,
+  };
+
+  const bills = await Bill.find({
+    "student.id": { $in: students },
+    year,
+    month,
+  });
+
+  const billsFound = [];
+  const billsNotFound = [];
+
+  studentRes.forEach((student) => {
+    const bill = bills.find((b) => {
+      return b.student.id.toString() === student._id.toString();
+    });
+
+    if (bill) {
+      billsFound.push(bill);
+    } else {
+      const obj = {};
+      obj.student.id = student._id.toString();
+      console.log(obj);
+
+      billsNotFound.push(student);
+    }
+  });
+
+  return res.status(200).json(
+    new GenericReponse(200, "Bills Fetched Successfully", {
+      billsFound,
+      billsNotFound,
+    })
+  );
 });
 
 export {

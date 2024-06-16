@@ -6,7 +6,7 @@ import { GenericError } from "../utils/GenericError.js";
 import { GenericReponse } from "../utils/GenericResponse.js";
 
 const addBillFee = async (req, res) => {
-  const { name, amount, class: classId, interval } = req.body;
+  const { name, amount, classes, interval, classId } = req.body;
 
   if (!name) {
     return res.status(400).json(new GenericError(400, "Name is required"));
@@ -22,13 +22,6 @@ const addBillFee = async (req, res) => {
         );
     }
   }
-
-  if (name === BILL_FEE_LIST[2] && !classId) {
-    return res
-      .status(400)
-      .json(new GenericError(400, `Class is required for ${name}`));
-  }
-
   if (amount === undefined || amount === null) {
     return res.status(400).json(new GenericError(400, "Amount is required"));
   } else {
@@ -43,29 +36,54 @@ const addBillFee = async (req, res) => {
         .json(new GenericError(400, "Amount must be greater than 0"));
     }
   }
-
-  if (classId && name === BILL_FEE_LIST[2]) {
-    const isClass = await Class.findById(classId);
-    if (!isClass) {
-      return res.status(400).json(new GenericError(400, "Class not found"));
-    }
-  }
-
   if (interval && typeof interval !== "number") {
     return res
       .status(400)
       .json(new GenericError(400, "Interval must be a number"));
   }
 
-  if (name === BILL_FEE_LIST[2]) {
-    const isFee = await BillFee.findOne({ name, class: classId });
+  if (name === BILL_FEE_LIST[2] && !classId) {
+    return res.status(400).json(new GenericError(400, "Class Id is required"));
+  }
+
+  if (name === BILL_FEE_LIST[2] && classId) {
+    if (!mongoose.Types.ObjectId.isValid(classId)) {
+      return res.status(400).json(new GenericError(400, "Invalid class id"));
+    }
+    const classRes = await Class.findById(classId);
+    if (!classRes) {
+      return res.status(404).json(new GenericError(404, "Class  not found"));
+    }
+  }
+
+  if (!classes && BILL_FEE_LIST[2] !== name) {
+    return res.status(400).json(new GenericError(400, "Classes is required"));
+  }
+
+  if (!Array.isArray(classes) && BILL_FEE_LIST[2] !== name) {
+    return res
+      .status(400)
+      .json(new GenericError(400, "Classes must be an array"));
+  }
+
+  classes.forEach((classId) => {
+    if (
+      !mongoose.Types.ObjectId.isValid(classId) &&
+      BILL_FEE_LIST[2] !== name
+    ) {
+      return res.status(400).json(new GenericError(400, "Invalid class id"));
+    }
+  });
+
+  if (BILL_FEE_LIST[2] !== name) {
+    const isFee = await BillFee.findOne({ name });
     if (isFee) {
       return res
         .status(400)
-        .json(new GenericError(400, `${name}  already exists for this class`));
+        .json(new GenericError(400, `${name} already exists`));
     }
   } else {
-    const isFee = await BillFee.findOne({ name });
+    const isFee = await BillFee.findOne({ name, class: classId });
     if (isFee) {
       return res
         .status(400)
@@ -73,17 +91,39 @@ const addBillFee = async (req, res) => {
     }
   }
 
+  const cleanClasses = [];
+  classes.forEach((classId) => {
+    const c = cleanClasses.find((c) => c === classId);
+    if (!c) {
+      cleanClasses.push(classId);
+    }
+  });
+
+  if (BILL_FEE_LIST[2] !== name) {
+    const classRes = await Class.find({ _id: { $in: cleanClasses } });
+    if (classRes.length !== cleanClasses.length && BILL_FEE_LIST[2] !== name) {
+      return res.status(404).json(new GenericError(404, "Class not Found"));
+    }
+  }
+
   try {
     const billFee = await BillFee.create({
       name,
       amount,
-      class: name !== BILL_FEE_LIST[2] ? undefined : classId,
+      classes:
+        name === BILL_FEE_LIST[2]
+          ? []
+          : cleanClasses.length > 0
+            ? cleanClasses
+            : [],
       interval: interval || 0,
+      class: name === BILL_FEE_LIST[2] ? classId : undefined,
     });
     res
       .status(201)
       .json(new GenericReponse(201, "Bill fee Created SuccessFully", billFee));
   } catch (error) {
+    console.log(error);
     res
       .status(400)
       .json(new GenericError(500, "Error while creating bill fee"));
@@ -94,6 +134,7 @@ const getBillFees = async (_, res) => {
   try {
     const billFees = await BillFee.find()
       .populate("class", "name section")
+      .populate("classes", "name section")
       .sort([["class", 1]]);
     return res
       .status(200)
@@ -116,10 +157,9 @@ const getBillFee = async (req, res) => {
   }
 
   try {
-    const billFee = await BillFee.findById(id).populate(
-      "class",
-      "name section"
-    );
+    const billFee = await BillFee.findById(id)
+      .populate("class", "name section")
+      .populate("classes", "name section");
     if (!billFee) {
       return res.status(404).json(new GenericError(404, "Bill Fee not found"));
     }
@@ -156,7 +196,7 @@ const deleteBillFee = async (req, res) => {
 };
 const updateBillFee = async (req, res) => {
   const { id } = req.params;
-  const { amount, interval } = req.body;
+  const { amount, interval, classes } = req.body;
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return res.status(400).json(new GenericError(400, "Invalid id"));
   }
@@ -186,15 +226,51 @@ const updateBillFee = async (req, res) => {
   if (!isBillFee) {
     return res.status(404).json(new GenericError(404, "Bill Fee not found"));
   }
+
+  const cleanClasses = [];
+  if (isBillFee.name !== BILL_FEE_LIST[2]) {
+    if (!classes) {
+      return res.status(400).json(new GenericError(400, "Classes is required"));
+    }
+    if (!Array.isArray(classes)) {
+      return res
+        .status(400)
+        .json(new GenericError(400, "Classes must be an array"));
+    }
+    classes.forEach((classId) => {
+      if (!mongoose.Types.ObjectId.isValid(classId)) {
+        return res.status(400).json(new GenericError(400, "Invalid class id"));
+      }
+    });
+    classes.forEach((classId) => {
+      const c = cleanClasses.find((c) => c === classId);
+      if (!c) {
+        cleanClasses.push(classId);
+      }
+    });
+
+    const classRes = await Class.find({ _id: { $in: cleanClasses } });
+    if (classRes.length !== cleanClasses.length) {
+      return res.status(404).json(new GenericError(404, "Class not Found"));
+    }
+  }
   try {
     const billFee = await BillFee.findByIdAndUpdate(
       id,
       {
         amount,
         interval: interval || 0,
+        classes:
+          isBillFee.name === BILL_FEE_LIST[2]
+            ? []
+            : cleanClasses.length > 0
+              ? cleanClasses
+              : [],
       },
       { new: true }
-    ).populate("class", "name section");
+    )
+      .populate("class", "name section")
+      .populate("classes", "name section");
     return res
       .status(200)
       .json(new GenericReponse(200, "Bill Fee updated successfully", billFee));

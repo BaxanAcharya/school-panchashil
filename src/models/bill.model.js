@@ -160,6 +160,12 @@ const billSchema = new mongoose.Schema(
       required: true,
       default: false,
     },
+
+    paidAmount: {
+      type: Number,
+      required: false,
+      default: 0,
+    },
   },
   { timestamps: true }
 );
