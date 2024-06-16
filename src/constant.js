@@ -16,6 +16,8 @@ export const BILL_FEE_LIST = [
   "Service Fee",
   "Stationary Fee",
   "Deposit",
-  "Evaluation Fee",
-  "Diary/ID Card",
+  "Evaluation Term Fee",
+  "Evaluation Test Fee",
+  "Diary",
+  "Identity Card",
 ];
