@@ -40,7 +40,7 @@ const addStudent = handleAsync(async (req, res) => {
     destination,
     feeDiscount,
     transportFeeDiscount,
-    isNew,
+    isNewStudent,
     admissionDiscount,
     stationaryFeeDiscount,
   } = req.body;
@@ -142,8 +142,8 @@ const addStudent = handleAsync(async (req, res) => {
     destination,
     feeDiscount: feeDiscount || 0,
     transportFeeDiscount: !destination ? 0 : transportFeeDiscount || 0,
-    isNew: isNew || false,
-    admissionDiscount: !isNew ? 0 : admissionDiscount || 0,
+    isNewStudent: isNewStudent || false,
+    admissionDiscount: !isNewStudent ? 0 : admissionDiscount || 0,
     stationaryFeeDiscount: stationaryFeeDiscount || 0,
   });
   if (!student) {
@@ -191,7 +191,7 @@ const updateStudentById = handleAsync(async (req, res) => {
     destination,
     feeDiscount,
     transportFeeDiscount,
-    isNew,
+    isNewStudent,
     dueAmount,
     admissionDiscount,
     stationaryFeeDiscount,
@@ -295,9 +295,9 @@ const updateStudentById = handleAsync(async (req, res) => {
     class: classId,
     feeDiscount: feeDiscount || 0,
     transportFeeDiscount: !destination ? 0 : transportFeeDiscount || 0,
-    isNew: isNew || false,
+    isNewStudent: isNewStudent || false,
     dueAmount: dueAmount || 0,
-    admissionDiscount: !isNew ? 0 : admissionDiscount || 0,
+    admissionDiscount: !isNewStudent ? 0 : admissionDiscount || 0,
     stationaryFeeDiscount: stationaryFeeDiscount || 0,
   };
 
