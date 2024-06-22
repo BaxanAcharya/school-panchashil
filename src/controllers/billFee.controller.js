@@ -4,8 +4,9 @@ import BillFee from "../models/billFee.model.js";
 import { Class } from "../models/class.model.js";
 import { GenericError } from "../utils/GenericError.js";
 import { GenericReponse } from "../utils/GenericResponse.js";
+import { handleAsync } from "../utils/handleAsync.js";
 
-const addBillFee = async (req, res) => {
+const addBillFee = handleAsync(async (req, res) => {
   const { name, amount, classes, interval, classId } = req.body;
 
   if (!name) {
@@ -128,9 +129,9 @@ const addBillFee = async (req, res) => {
       .status(400)
       .json(new GenericError(500, "Error while creating bill fee"));
   }
-};
+});
 
-const getBillFees = async (_, res) => {
+const getBillFees = handleAsync(async (_, res) => {
   try {
     const billFees = await BillFee.find()
       .populate("class", "name section")
@@ -147,9 +148,9 @@ const getBillFees = async (_, res) => {
       .status(500)
       .json(new GenericError(500, "Error while fetching bill fees"));
   }
-};
+});
 
-const getBillFee = async (req, res) => {
+const getBillFee = handleAsync(async (req, res) => {
   const { id } = req.params;
 
   if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -171,9 +172,9 @@ const getBillFee = async (req, res) => {
       .status(500)
       .json(new GenericError(500, "Error while fetching bill fee"));
   }
-};
+});
 
-const deleteBillFee = async (req, res) => {
+const deleteBillFee = handleAsync(async (req, res) => {
   const { id } = req.params;
 
   if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -193,8 +194,8 @@ const deleteBillFee = async (req, res) => {
       .status(500)
       .json(new GenericError(500, "Error while deleting bill fee"));
   }
-};
-const updateBillFee = async (req, res) => {
+});
+const updateBillFee = handleAsync(async (req, res) => {
   const { id } = req.params;
   const { amount, interval, classes } = req.body;
   if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -279,5 +280,5 @@ const updateBillFee = async (req, res) => {
       .status(500)
       .json(new GenericError(500, "Error while updating bill fee"));
   }
-};
+});
 export { addBillFee, deleteBillFee, getBillFee, getBillFees, updateBillFee };
