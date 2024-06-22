@@ -216,21 +216,18 @@ const addBill = handleAsync(async (req, res) => {
     class: isStudent.class,
   });
 
-  if (!stationary) {
-    return res
-      .status(400)
-      .json(new GenericError(400, `Stationary fee not found`));
-  }
-
-  if (stationary.amount < isStudent.stationaryFeeDiscount) {
-    return res
-      .status(400)
-      .json(new GenericError(400, `Stationary fee is less than the discount`));
-  }
-
-  stationaryFee = stationary.amount;
-  if (isStudent.stationaryFeeDiscount > 0 && stationaryFee > 0) {
-    stationaryFee -= isStudent.stationaryFeeDiscount;
+  if (stationary) {
+    if (stationary.amount < isStudent.stationaryFeeDiscount) {
+      return res
+        .status(400)
+        .json(
+          new GenericError(400, `Stationary fee is less than the discount`)
+        );
+    }
+    stationaryFee = stationary.amount;
+    if (isStudent.stationaryFeeDiscount > 0 && stationaryFee > 0) {
+      stationaryFee -= isStudent.stationaryFeeDiscount;
+    }
   }
 
   //deposit
