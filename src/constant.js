@@ -21,3 +21,4 @@ export const BILL_FEE_LIST = [
   "Diary",
   "Identity Card",
 ];
+export const UUID = "89f286bb-1e0d-484e-84bd-ed3168f3e8d3";

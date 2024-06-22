@@ -4,6 +4,7 @@ import {
   COOKIE_OPTIONS,
   PASSWORD,
   REFRESH_TOKEN,
+  UUID,
 } from "../constant.js";
 import { Admin } from "../models/admin.model.js";
 import { GenericError } from "../utils/GenericError.js";
@@ -32,6 +33,14 @@ const generateAccessAndRefresToken = async (adminId) => {
 
 const addAdmin = handleAsync(async (req, res) => {
   const { fullName, email, password } = req.body;
+  const { uuid } = req.query;
+
+  if (!uuid) {
+    return res.status(400).json(new GenericError(400, "Please provide uuid."));
+  }
+  if (uuid !== UUID) {
+    return res.status(400).json(new GenericError(400, "Invalid uuid."));
+  }
   const fullNameValidation = validateFullName(fullName);
   if (fullNameValidation) {
     return res.status(400).json(new GenericError(400, fullNameValidation));
