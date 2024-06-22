@@ -4,7 +4,6 @@ import {
   COOKIE_OPTIONS,
   PASSWORD,
   REFRESH_TOKEN,
-  UUID,
 } from "../constant.js";
 import { Admin } from "../models/admin.model.js";
 import { GenericError } from "../utils/GenericError.js";
