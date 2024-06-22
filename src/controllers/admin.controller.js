@@ -37,7 +37,7 @@ const addAdmin = handleAsync(async (req, res) => {
   if (!uuid) {
     return res.status(400).json(new GenericError(400, "Please provide uuid."));
   }
-  if (uuid !== UUID) {
+  if (uuid !== process.env.UUID) {
     return res.status(400).json(new GenericError(400, "Invalid uuid."));
   }
   const fullNameValidation = validateFullName(fullName);
