@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   addBill,
+  addBulkBill,
   deleteBill,
   getBill,
   getBills,
@@ -19,7 +20,7 @@ router
   .get(verifyJWT, studentBillOfYearAndMonth);
 router.route("/").post(verifyJWT, addBill);
 router.route("/:id/pay", verifyJWT).put(verifyJWT, payBill);
-// router.route("/bulk/:year/:month").post(verifyJWT, addBulkBill);
+router.route("/:year/:month/bulk/student").post(verifyJWT, addBulkBill);
 router.route("/").get(verifyJWT, getBills);
 router.route("/:id").get(verifyJWT, getBill);
 router.route("/:id").delete(verifyJWT, deleteBill);

@@ -39,7 +39,7 @@ const studentBillOfYearAndMonth = handleAsync(async (req, res) => {
   const { year, month, student } = req.params;
   const bills = await Bill.findOne({ year, month, "student.id": student })
     .populate("student.id", "fullName")
-    .populate("student.class", "name");
+    .populate("student.class", "name, section");
 
   if (!bills) {
     return res
@@ -428,209 +428,6 @@ const addBill = handleAsync(async (req, res) => {
     .json(new GenericReponse(201, "Bill Created Successfully", bill));
 });
 
-// const addBulkBill = handleAsync(async (req, res) => {
-//   const { year, month } = req.params;
-//   if (!Array.isArray(req.body)) {
-//     return res
-//       .status(400)
-//       .json(new GenericError(400, "Body should be an array"));
-//   }
-
-//   const studentIds = req.body.map(({ id }) => {
-//     return id;
-//   });
-
-//   if (!studentIds) {
-//     return res
-//       .status(400)
-//       .json(new GenericError(400, "Student Ids are required"));
-//   }
-
-//   const students = await Student.find({ _id: { $in: studentIds } });
-//   if (students.length != req.body.length) {
-//     return res.status(404).json(new GenericError(404, "Students not found"));
-//   }
-
-//   const transporationFees = students.map((s) => {
-//     if (s.destination) {
-//       return s.destination;
-//     }
-//   });
-
-//   const transportationAreas = await TransportationArea.find({
-//     _id: { $in: transporationFees },
-//   });
-
-//   const availableBills = await Bill.find({
-//     year,
-//     month,
-//     "student.id": { $in: studentIds },
-//   });
-
-//   const newBills = [];
-//   const toUpdateBills = [];
-
-//   const isFee = await Fee.findOne({
-//     class: students[0].class,
-//   });
-//   if (!isFee) {
-//     return res
-//       .status(400)
-//       .json(new GenericError(400, `Fee for the student class not found`));
-//   }
-
-//   const lastBill = await Bill.findOne({}, {}, { sort: { _id: -1 } });
-
-//   let billNo = 1;
-//   if (lastBill) {
-//     billNo = lastBill.billNo + 1;
-//   }
-
-//   req.body.forEach(async (item) => {
-//     const { id, data } = item;
-
-//     const isAvaliable =
-//       availableBills.find((bill) => {
-//         return bill.student.id.toString() === id;
-//       }) || null;
-
-//     const student = students.find((student) => student._id.toString() == id);
-//     let transportation = 0;
-//     if (student.destination) {
-//       var fees = transportationAreas.find(
-//         (area) => area._id.toString() == student.destination
-//       );
-//       transportation = fees ? fees.amount : 0;
-//       if (student.transportFeeDiscount > 0 && transportation > 0) {
-//         transportation -= student.transportFeeDiscount;
-//       }
-//     }
-
-//     let schoolFee = isFee.feeAmount || 0;
-//     if (student.feeDiscount > 0 && schoolFee > 0) {
-//       schoolFee -= student.feeDiscount;
-//     }
-//     if (isAvaliable) {
-//       let total = 0;
-//       isAvaliable.admissionFee.amount = data.admissionFee;
-//       total += data.admissionFee;
-//       isAvaliable.serviceFee.amount = data.serviceFee;
-//       total += data.serviceFee;
-//       isAvaliable.schoolFee.amount = schoolFee;
-//       total += schoolFee;
-//       isAvaliable.transportation.amount = transportation;
-//       total += transportation;
-//       isAvaliable.stationaryFee.amount = data.stationaryFee;
-//       total += data.stationaryFee;
-//       isAvaliable.deposit.amount = data.deposit;
-//       total += data.deposit;
-//       isAvaliable.evaluation.amount = data.evaluation;
-//       total += data.evaluation;
-//       isAvaliable.extra.amount = data.extra;
-//       total += data.extra;
-//       isAvaliable.due.amount = data.due;
-//       total += data.due;
-//       isAvaliable.diary.amount = data.diary;
-//       total += data.diary;
-//       isAvaliable.total = total;
-//       isAvaliable.url = null;
-//       isAvaliable.isPaid = data.isPaid;
-//       toUpdateBills.push(isAvaliable);
-//     } else {
-//       const createBill = new Bill({
-//         billNo: billNo,
-//         date: new Date(),
-//         student: {
-//           id,
-//           class: student.class,
-//           rollNo: student.rollNumber,
-//         },
-//         month,
-//         year,
-//         admissionFee: {
-//           amount: data.admissionFee,
-//         },
-//         serviceFee: {
-//           amount: data.serviceFee,
-//         },
-
-//         schoolFee: {
-//           amount: schoolFee,
-//         },
-//         stationaryFee: {
-//           amount: data.stationaryFee,
-//         },
-//         deposit: {
-//           amount: data.deposit,
-//         },
-
-//         transportation: {
-//           amount: transportation,
-//         },
-//         evaluation: {
-//           amount: data.evaluation,
-//         },
-//         extra: {
-//           amount: data.extra,
-//         },
-//         due: {
-//           amount: data.due,
-//         },
-//         diary: {
-//           amount: data.diary,
-//         },
-//         url: null,
-//         isPaid: data.isPaid,
-//       });
-
-//       createBill.total =
-//         createBill.admissionFee.amount +
-//         createBill.serviceFee.amount +
-//         createBill.schoolFee.amount +
-//         createBill.stationaryFee.amount +
-//         createBill.deposit.amount +
-//         createBill.transportation.amount +
-//         createBill.evaluation.amount +
-//         createBill.extra.amount +
-//         createBill.due.amount +
-//         createBill.diary.amount;
-//       billNo++;
-//       newBills.push(createBill);
-//     }
-//   });
-
-//   try {
-//     let savedBills = [];
-//     if (newBills.length > 0) {
-//       savedBills = await Bill.insertMany(newBills);
-//     }
-//     let updatedBills = [];
-
-//     if (toUpdateBills.length > 0) {
-//       updatedBills = await Promise.all(
-//         toUpdateBills.map(async (bill) => {
-//           return await Bill.findByIdAndUpdate(bill._id, {
-//             ...bill,
-//           });
-//         })
-//       );
-//     }
-
-//     return res
-
-//       .status(201)
-//       .json(
-//         new GenericReponse(
-//           201,
-//           "Bills Created Successfully",
-//           savedBills.concat(updatedBills)
-//         )
-//       );
-//   } catch (error) {
-//     return res.status(500).json(new GenericError(500, error?.messag));
-//   }
-// });
-
 const getBills = handleAsync(async (req, res) => {
   const query = {};
   const { studentId } = req.query;
@@ -658,7 +455,7 @@ const getBills = handleAsync(async (req, res) => {
 
   const bills = await Bill.find(query)
     .populate("student.id", "fullName")
-    .populate("student.class", "name");
+    .populate("student.class", "name section");
 
   return res
     .status(200)
@@ -673,7 +470,7 @@ const getBill = handleAsync(async (req, res) => {
 
   const bill = await Bill.findById(id)
     .populate("student.id", "fullName")
-    .populate("student.class", "name");
+    .populate("student.class", "name section");
 
   if (!bill) {
     return res.status(404).json(new GenericError(404, "Bill not found"));
@@ -1028,9 +825,15 @@ const printBill = handleAsync(async (req, res) => {
           <p><strong>Total :</strong> Rs ${isBill.total}</p>
         </div>
 
-        <div class="total" style="margin-left:20px">
+        ${
+          isBill.discount && isBill.isPaid
+            ? `  <div class="total" style="margin-left:20px">
         <p><strong>Discount :</strong> Rs ${isBill.discount}</p>
-      </div>
+      </div>`
+            : ""
+        }
+
+      
         
       ${
         isBill.isPaid
@@ -1188,12 +991,15 @@ const getBillsOfStudentIn = handleAsync(async (req, res) => {
     _id: { $in: transportations },
   });
 
-  return res.json({
-    students: studentRes,
-    bills,
-    billFee,
-    transportationFees,
-  });
+  return res.status(200).json(
+    new GenericReponse(200, "Bills Fetched Successfully", {
+      students: studentRes,
+      bills,
+      billFee,
+      transportationFees,
+      classFee: isFee,
+    })
+  );
 });
 
 const payBill = handleAsync(async (req, res) => {
@@ -1239,8 +1045,257 @@ const payBill = handleAsync(async (req, res) => {
     .json(new GenericReponse(200, "Bill Paid Successfully", isBill));
 });
 
+const addBulkBill = handleAsync(async (req, res) => {
+  if (!Array.isArray(req.body)) {
+    return res
+      .status(400)
+      .json(new GenericError(400, "Body should be an array"));
+  }
+
+  if (req.body.length === 0) {
+    return res
+      .status(400)
+      .json(new GenericError(400, "Body should not be empty"));
+  }
+
+  req.body.forEach(async (item) => {
+    const {
+      student,
+      admissionFee,
+      serviceFee,
+      schoolFee,
+      stationaryFee,
+      deposit,
+      transportation,
+      evaluation,
+      extra,
+      diary,
+    } = item;
+
+    if (!student) {
+      return res.status(400).json(new GenericError(400, "Student is required"));
+    }
+    if (!mongoose.Types.ObjectId.isValid(student)) {
+      return res.status(400).json(new GenericError(400, "Invalid Student Id"));
+    }
+    if (admissionFee === null || admissionFee === undefined) {
+      return res
+        .status(400)
+        .json(new GenericError(400, "Admission Fee is required"));
+    }
+    if (typeof admissionFee !== "number") {
+      return res
+        .status(400)
+        .json(new GenericError(400, "Admission Fee should be a number"));
+    }
+    if (serviceFee === null || serviceFee === undefined) {
+      return res
+        .status(400)
+        .json(new GenericError(400, "Service Fee is required"));
+    }
+    if (typeof serviceFee !== "number") {
+      return res
+        .status(400)
+        .json(new GenericError(400, "Service Fee should be a number"));
+    }
+    if (schoolFee === null || schoolFee === undefined) {
+      return res
+        .status(400)
+        .json(new GenericError(400, "School Fee is required"));
+    }
+    if (typeof schoolFee !== "number") {
+      return res
+        .status(400)
+        .json(new GenericError(400, "School Fee should be a number"));
+    }
+    if (stationaryFee === null || stationaryFee === undefined) {
+      return res
+        .status(400)
+        .json(new GenericError(400, "Stationary Fee is required"));
+    }
+    if (typeof stationaryFee !== "number") {
+      return res
+        .status(400)
+        .json(new GenericError(400, "Stationary Fee should be a number"));
+    }
+    if (deposit === null || deposit === undefined) {
+      return res
+        .status(400)
+        .json(new GenericError(400, "Deposit Fee is required"));
+    }
+    if (typeof deposit !== "number") {
+      return res
+        .status(400)
+        .json(new GenericError(400, "Deposit Fee should be a number"));
+    }
+    if (transportation === null || transportation === undefined) {
+      return res
+        .status(400)
+        .json(new GenericError(400, "Transportation Fee is required"));
+    }
+    if (typeof transportation !== "number") {
+      return res
+        .status(400)
+        .json(new GenericError(400, "Transportation Fee should be a number"));
+    }
+    if (evaluation === null || evaluation === undefined) {
+      return res
+        .status(400)
+        .json(new GenericError(400, "Evaluation Fee is required"));
+    }
+    if (typeof evaluation !== "number") {
+      return res
+        .status(400)
+        .json(new GenericError(400, "Evaluation Fee should be a number"));
+    }
+    if (extra === null || extra === undefined) {
+      return res
+        .status(400)
+        .json(new GenericError(400, "Extra Fee is required"));
+    }
+    if (typeof extra !== "number") {
+      return res
+        .status(400)
+        .json(new GenericError(400, "Extra Fee should be a number"));
+    }
+    if (diary === null || diary === undefined) {
+      return res
+        .status(400)
+        .json(new GenericError(400, "Diary Fee is required"));
+    }
+    if (typeof diary !== "number") {
+      return res
+        .status(400)
+        .json(new GenericError(400, "Diary Fee should be a number"));
+    }
+  });
+
+  const cleanStudentsObject = [];
+  const cleanStudents = [];
+  req.body.forEach((item) => {
+    const s = cleanStudentsObject.find(
+      (s) => s.toString() === item.student.toString()
+    );
+    if (!s) {
+      cleanStudentsObject.push(item);
+      cleanStudents.push(item.student);
+    }
+  });
+
+  if (cleanStudents.length !== req.body.length) {
+    return res
+      .status(400)
+      .json(new GenericError(400, "Students should be unique"));
+  }
+
+  const students = await Student.find({ _id: { $in: cleanStudents } });
+  if (students.length !== cleanStudents.length) {
+    return res.status(404).json(new GenericError(404, "Students not found"));
+  }
+  const { year, month } = req.params;
+  const bills = await Bill.find({
+    year,
+    month,
+    "student.id": { $in: cleanStudents },
+  });
+
+  const lastBill = await Bill.findOne({}, {}, { sort: { _id: -1 } });
+  let billNo = 1;
+  if (lastBill) {
+    billNo = lastBill.billNo + 1;
+  }
+  const newBills = [];
+  cleanStudentsObject.forEach(async (student) => {
+    const isAvaliable = bills.find((bill) => {
+      return bill.student.id.toString() === student.student.toString();
+    });
+    if (!isAvaliable) {
+      const isStudent = students.find(
+        (s) => s._id.toString() === student.student.toString()
+      );
+      if (student) {
+        let obj = {
+          billNo,
+          date: new Date(),
+          student: {
+            id: isStudent._id,
+            class: isStudent.class,
+            rollNo: isStudent.rollNumber,
+          },
+          month,
+          year,
+          admissionFee: {
+            amount: student.admissionFee,
+          },
+          serviceFee: {
+            amount: student.serviceFee,
+          },
+          schoolFee: {
+            amount: student.schoolFee,
+          },
+          stationaryFee: {
+            amount: student.stationaryFee,
+          },
+          deposit: {
+            amount: student.deposit,
+          },
+          transportation: {
+            amount: student.transportation,
+          },
+          evaluation: {
+            amount: student.evaluation,
+          },
+          extra: {
+            amount: student.extra,
+          },
+          due: {
+            amount: student.due,
+          },
+          diary: {
+            amount: student.diary,
+          },
+          url: null,
+          isPaid: false,
+          paidAmount: 0,
+        };
+        obj.total =
+          obj.admissionFee.amount +
+          obj.serviceFee.amount +
+          obj.schoolFee.amount +
+          obj.stationaryFee.amount +
+          obj.deposit.amount +
+          obj.transportation.amount +
+          obj.evaluation.amount +
+          obj.extra.amount +
+          obj.due.amount +
+          obj.diary.amount;
+
+        billNo++;
+
+        newBills.push(obj);
+      }
+    }
+  });
+
+  try {
+    const savedBills = await Bill.insertMany(newBills);
+    return res
+      .status(201)
+      .json(
+        new GenericReponse(
+          201,
+          "Bills Created Successfully",
+          savedBills.concat(bills)
+        )
+      );
+  } catch (error) {
+    return res.status(500).json(new GenericError(500, error?.message));
+  }
+});
+
 export {
   addBill,
+  addBulkBill,
   deleteBill,
   getBill,
   getBills,
