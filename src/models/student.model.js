@@ -103,6 +103,10 @@ const studentSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    serviceFeeDiscount: {
+      type: Number,
+      default: 0,
+    },
   },
   { timestamps: true }
 );

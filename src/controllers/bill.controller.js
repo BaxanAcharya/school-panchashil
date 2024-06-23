@@ -146,7 +146,9 @@ const addBill = handleAsync(async (req, res) => {
         );
     }
 
-    if (transportationArea.amount < isStudent.transportFeeDiscount) {
+    const transportationFeeDiscount = isStudent.transportFeeDiscount || 0;
+
+    if (transportationArea.amount < transportationFeeDiscount) {
       return res
         .status(400)
         .json(
@@ -155,8 +157,8 @@ const addBill = handleAsync(async (req, res) => {
     }
     transportationFee = transportationArea.amount;
 
-    if (isStudent.transportFeeDiscount > 0 && transportationFee > 0) {
-      transportationFee -= isStudent.transportFeeDiscount;
+    if (transportationFeeDiscount > 0 && transportationFee > 0) {
+      transportationFee -= transportationFeeDiscount;
     }
   }
 
@@ -171,15 +173,15 @@ const addBill = handleAsync(async (req, res) => {
       .json(new GenericError(400, `Fee for this student class not found`));
   }
 
-  if (isFee.feeAmount < isStudent.feeDiscount) {
+  const schoolFeeDiscount = isStudent.feeDiscount || 0;
+  if (isFee.feeAmount < schoolFeeDiscount) {
     return res
       .status(400)
       .json(new GenericError(400, `Fee is less than the discount`));
   }
-
   schoolFee = isFee.feeAmount;
-  if (isStudent.feeDiscount > 0 && schoolFee > 0) {
-    schoolFee -= isStudent.feeDiscount;
+  if (schoolFeeDiscount > 0 && schoolFee > 0) {
+    schoolFee -= schoolFeeDiscount;
   }
 
   //admission Fee
@@ -194,6 +196,15 @@ const addBill = handleAsync(async (req, res) => {
         admissionFee = admission.amount;
       }
     }
+    const admissionFeeDiscount = isStudent.admissionFeeDiscount || 0;
+    if (admissionFeeDiscount > admissionFee) {
+      return res
+        .status(400)
+        .json(new GenericError(400, `Admission fee is less than the discount`));
+    }
+    if (admissionFeeDiscount > 0 && admissionFee > 0) {
+      admissionFee -= admissionFeeDiscount;
+    }
   }
 
   //service Fee
@@ -206,6 +217,15 @@ const addBill = handleAsync(async (req, res) => {
 
     if (classList.includes(isStudent.class)) {
       serviceFee = service.amount;
+    }
+    const serviceFeeDiscount = isStudent.serviceFeeDiscount || 0;
+    if (serviceFeeDiscount > serviceFee) {
+      return res
+        .status(400)
+        .json(new GenericError(400, `Service fee is less than the discount`));
+    }
+    if (serviceFeeDiscount > 0 && serviceFee > 0) {
+      serviceFee -= serviceFeeDiscount;
     }
   }
 
@@ -225,6 +245,16 @@ const addBill = handleAsync(async (req, res) => {
         );
     }
     stationaryFee = stationary.amount;
+    const stationaryFeeDiscount = isStudent.stationaryFeeDiscount || 0;
+
+    if (stationaryFeeDiscount > stationaryFee) {
+      return res
+        .status(400)
+        .json(
+          new GenericError(400, `Stationary fee is less than the discount`)
+        );
+    }
+
     if (isStudent.stationaryFeeDiscount > 0 && stationaryFee > 0) {
       stationaryFee -= isStudent.stationaryFeeDiscount;
     }
@@ -302,9 +332,6 @@ const addBill = handleAsync(async (req, res) => {
   }
 
   var dueAmount = isStudent?.dueAmount || 0;
-
-  console.log(extra);
-
   let total = 0;
   total += admissionFee;
   total += serviceFee;

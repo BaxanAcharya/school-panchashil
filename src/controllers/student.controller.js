@@ -43,6 +43,7 @@ const addStudent = handleAsync(async (req, res) => {
     isNewStudent,
     admissionDiscount,
     stationaryFeeDiscount,
+    serviceFeeDiscount,
   } = req.body;
 
   const fullNameCheck = validateFullName(fullName);
@@ -145,6 +146,7 @@ const addStudent = handleAsync(async (req, res) => {
     isNewStudent: isNewStudent || false,
     admissionDiscount: !isNewStudent ? 0 : admissionDiscount || 0,
     stationaryFeeDiscount: stationaryFeeDiscount || 0,
+    serviceFeeDiscount: serviceFeeDiscount || 0,
   });
   if (!student) {
     return res
@@ -195,6 +197,7 @@ const updateStudentById = handleAsync(async (req, res) => {
     dueAmount,
     admissionDiscount,
     stationaryFeeDiscount,
+    serviceFeeDiscount,
   } = req.body;
 
   const fullNameCheck = validateFullName(fullName);
@@ -299,6 +302,7 @@ const updateStudentById = handleAsync(async (req, res) => {
     dueAmount: dueAmount || 0,
     admissionDiscount: !isNewStudent ? 0 : admissionDiscount || 0,
     stationaryFeeDiscount: stationaryFeeDiscount || 0,
+    serviceFeeDiscount: serviceFeeDiscount || 0,
   };
 
   if (destination !== undefined) {
