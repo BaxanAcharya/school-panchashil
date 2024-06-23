@@ -331,7 +331,18 @@ const addBill = handleAsync(async (req, res) => {
     }
   }
 
-  var dueAmount = isStudent?.dueAmount || 0;
+  //due amount
+  let dueAmount = 0;
+  const unpaidBills = await Bill.findOne({
+    "student.id": student,
+  }).sort({ billNo: -1 });
+
+  if (!unpaidBills) {
+    dueAmount = isStudent?.dueAmount || 0;
+  } else {
+    dueAmount = unpaidBills.total - unpaidBills.paidAmount;
+  }
+
   let total = 0;
   total += admissionFee;
   total += serviceFee;
@@ -398,6 +409,9 @@ const addBill = handleAsync(async (req, res) => {
   }
 
   billToSave.billNo = billNo;
+
+  isStudent.dueAmount = dueAmount;
+  await isStudent.save();
 
   const bill = await Bill.create({
     ...billToSave,
@@ -1007,12 +1021,35 @@ const printBill = handleAsync(async (req, res) => {
         <div class="total">
           <p><strong>Total :</strong> Rs ${isBill.total}</p>
         </div>
+        
+      ${
+        isBill.isPaid
+          ? ` <div class="total">
+          <p><strong>Paid :</strong> Rs ${isBill.paidAmount}</p>
+        </div>`
+          : ``
+      }
         <div>
           <p>
-            <strong>Amount in words:</strong> ${numberToWords(isBill.total)}
+            <strong>Total Amount in words:</strong> ${numberToWords(
+              isBill.total
+            )}
             Only
           </p>
         </div>
+        ${
+          isBill.isPaid
+            ? `<div>
+          <p>
+            <strong>Total Paid Amount in words:</strong> ${numberToWords(
+              isBill.paidAmount
+            )}
+            Only
+          </p>  
+        </div>`
+            : ``
+        }
+           
         <div class="footer">
           <p>
             Note: Monthly fee should be paid within ten days from the starting of
@@ -1234,11 +1271,54 @@ const printBill = handleAsync(async (req, res) => {
 //   );
 // });
 
+const payBill = handleAsync(async (req, res) => {
+  const { id } = req.params;
+  const { paidAmount } = req.body;
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json(new GenericError(400, "Invalid Bill Id"));
+  }
+  const isBill = await Bill.findById(id);
+  if (!isBill) {
+    return res.status(404).json(new GenericError(404, "Bill not found"));
+  }
+  if (isBill.isPaid) {
+    return res.status(400).json(new GenericError(400, "Bill already paid"));
+  }
+
+  if (paidAmount > isBill.total) {
+    return res
+      .status(400)
+      .json(
+        new GenericError(400, "Paid amount is greater than the total amount")
+      );
+  }
+  const isStudent = await Student.findById(isBill.student.id);
+  if (!isStudent) {
+    return res
+      .status(404)
+      .json(new GenericError(404, "Student not found for this bill"));
+  }
+
+  isStudent.dueAmount = isBill.total - paidAmount;
+  await isStudent.save();
+
+  isBill.isPaid = true;
+  isBill.paidAmount = paidAmount;
+  isBill.url = null;
+
+  await isBill.save();
+
+  return res
+    .status(200)
+    .json(new GenericReponse(200, "Bill Paid Successfully", isBill));
+});
+
 export {
   addBill,
   deleteBill,
   getBill,
   getBills,
+  payBill,
   printBill,
   studentBillOfYearAndMonth,
   updateBill,
