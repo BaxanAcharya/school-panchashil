@@ -63,6 +63,8 @@ const addBill = handleAsync(async (req, res) => {
     extra,
     isDiary,
     isIdentityCard,
+    isStationaryFee,
+    isServiceFee,
   } = req.body;
 
   if (!student) {
@@ -209,54 +211,57 @@ const addBill = handleAsync(async (req, res) => {
 
   //service Fee
   let serviceFee = 0;
-  const service = await billFeeModel.findOne({
-    name: BILL_FEE_LIST[1],
-  });
-  if (service) {
-    const classList = service.classes;
+  if (isServiceFee) {
+    const service = await billFeeModel.findOne({
+      name: BILL_FEE_LIST[1],
+    });
+    if (service) {
+      const classList = service.classes;
 
-    if (classList.includes(isStudent.class)) {
-      serviceFee = service.amount;
-    }
-    const serviceFeeDiscount = isStudent.serviceFeeDiscount || 0;
-    if (serviceFeeDiscount > serviceFee) {
-      return res
-        .status(400)
-        .json(new GenericError(400, `Service fee is less than the discount`));
-    }
-    if (serviceFeeDiscount > 0 && serviceFee > 0) {
-      serviceFee -= serviceFeeDiscount;
+      if (classList.includes(isStudent.class)) {
+        serviceFee = service.amount;
+      }
+      const serviceFeeDiscount = isStudent.serviceFeeDiscount || 0;
+      if (serviceFeeDiscount > serviceFee) {
+        return res
+          .status(400)
+          .json(new GenericError(400, `Service fee is less than the discount`));
+      }
+      if (serviceFeeDiscount > 0 && serviceFee > 0) {
+        serviceFee -= serviceFeeDiscount;
+      }
     }
   }
-
   //stationary Fee
   let stationaryFee = 0;
-  const stationary = await billFeeModel.findOne({
-    name: BILL_FEE_LIST[2],
-    class: isStudent.class,
-  });
+  if (isStationaryFee) {
+    const stationary = await billFeeModel.findOne({
+      name: BILL_FEE_LIST[2],
+      class: isStudent.class,
+    });
 
-  if (stationary) {
-    if (stationary.amount < isStudent.stationaryFeeDiscount) {
-      return res
-        .status(400)
-        .json(
-          new GenericError(400, `Stationary fee is less than the discount`)
-        );
-    }
-    stationaryFee = stationary.amount;
-    const stationaryFeeDiscount = isStudent.stationaryFeeDiscount || 0;
+    if (stationary) {
+      if (stationary.amount < isStudent.stationaryFeeDiscount) {
+        return res
+          .status(400)
+          .json(
+            new GenericError(400, `Stationary fee is less than the discount`)
+          );
+      }
+      stationaryFee = stationary.amount;
+      const stationaryFeeDiscount = isStudent.stationaryFeeDiscount || 0;
 
-    if (stationaryFeeDiscount > stationaryFee) {
-      return res
-        .status(400)
-        .json(
-          new GenericError(400, `Stationary fee is less than the discount`)
-        );
-    }
+      if (stationaryFeeDiscount > stationaryFee) {
+        return res
+          .status(400)
+          .json(
+            new GenericError(400, `Stationary fee is less than the discount`)
+          );
+      }
 
-    if (isStudent.stationaryFeeDiscount > 0 && stationaryFee > 0) {
-      stationaryFee -= isStudent.stationaryFeeDiscount;
+      if (isStudent.stationaryFeeDiscount > 0 && stationaryFee > 0) {
+        stationaryFee -= isStudent.stationaryFeeDiscount;
+      }
     }
   }
 
@@ -1094,188 +1099,97 @@ const printBill = handleAsync(async (req, res) => {
         );
     });
 });
-// const getBillsOfStudentIn = handleAsync(async (req, res) => {
-//   const { year, month } = req.params;
-//   const { studentIds } = req.query;
 
-//   if (!studentIds) {
-//     return res
-//       .status(400)
-//       .json(new GenericError(400, "Student Ids are required"));
-//   }
+const getBillsOfStudentIn = handleAsync(async (req, res) => {
+  const { year, month } = req.params;
+  const { studentIds } = req.query;
+  if (!studentIds) {
+    return res
+      .status(400)
+      .json(new GenericError(400, "Student Ids are required"));
+  }
 
-//   let studentsIncoming = [];
-//   if (Array.isArray(studentIds)) {
-//     studentsIncoming = studentIds;
-//   } else {
-//     studentsIncoming = studentIds.split(",");
-//   }
+  let studentsIncoming = [];
+  if (Array.isArray(studentIds)) {
+    studentsIncoming = studentIds;
+  } else {
+    studentsIncoming = studentIds.split(",");
+  }
 
-//   if (!Array.isArray(studentsIncoming)) {
-//     return res
-//       .status(400)
-//       .json(new GenericError(400, "Student ids should be an array"));
-//   }
+  if (!Array.isArray(studentsIncoming)) {
+    return res
+      .status(400)
+      .json(new GenericError(400, "Student ids should be an array"));
+  }
 
-//   const students = [];
-//   studentsIncoming.forEach((id) => {
-//     const s = students.find((s) => {
-//       return s.toString() === id;
-//     });
-//     if (!s) {
-//       students.push(id);
-//     }
-//   });
+  const students = [];
+  studentsIncoming.forEach((id) => {
+    const s = students.find((s) => {
+      return s.toString() === id;
+    });
+    if (!s) {
+      students.push(id);
+    }
+  });
+  const studentRes = await Student.find({ _id: { $in: students } });
+  if (students.length != studentRes.length) {
+    return res.status(404).json(new GenericError(404, "Students not found"));
+  }
+  const classes = [];
 
-//   students.forEach((id) => {
-//     if (!mongoose.Types.ObjectId.isValid(id)) {
-//       return res
-//         .status(400)
-//         .json(new GenericError(400, `Invalid student id ${id}`));
-//     }
-//   });
+  studentRes.forEach((student) => {
+    const c = classes.find((c) => {
+      return c.toString() === student.class.toString();
+    });
+    if (!c) {
+      classes.push(student.class);
+    }
+  });
+  if (classes.length > 1) {
+    return res
+      .status(400)
+      .json(new GenericError(400, "Students should be of same class"));
+  }
 
-//   const studentRes = await Student.find({ _id: { $in: students } });
-//   if (students.length != studentRes.length) {
-//     return res.status(404).json(new GenericError(404, "Students not found"));
-//   }
+  const isFee = await Fee.findOne({
+    class: classes[0],
+  }).populate("class", "name");
+  if (!isFee) {
+    return res
+      .status(404)
+      .json(new GenericError(404, `Fee not found for this class`));
+  }
 
-//   const transportationAreas = [];
-//   studentRes.forEach((s) => {
-//     const t = transportationAreas.find((area) => {
-//       return area.toString() === s.destination.toString();
-//     });
-//     if (!t) {
-//       transportationAreas.push(s.destination);
-//     }
-//   });
+  const bills = await Bill.find({
+    "student.id": { $in: students },
+    year,
+    month,
+  });
 
-//   const transportationFees = await TransportationArea.find({
-//     _id: { $in: transportationAreas },
-//   });
+  const billFee = await billFeeModel.find();
 
-//   if (transportationAreas.length != transportationFees.length) {
-//     return res
-//       .status(404)
-//       .json(new GenericError(404, "Transportation Fees not found"));
-//   }
+  const transportations = [];
+  studentRes.forEach((student) => {
+    if (!student.destination) return;
+    const t = transportations.find((t) => {
+      return t.toString() === student.destination.toString();
+    });
+    if (!t) {
+      transportations.push(student.destination);
+    }
+  });
 
-//   const classes = [];
-//   studentRes.forEach((s) => {
-//     const c = classes.find((c) => {
-//       return c.toString() === s.class.toString();
-//     });
-//     if (!c) {
-//       classes.push(s.class);
-//     }
-//   });
+  const transportationFees = await TransportationArea.find({
+    _id: { $in: transportations },
+  });
 
-//   const classFees = await Fee.find({ class: { $in: classes } });
-//   if (classes.length != classFees.length) {
-//     return res.status(404).json(new GenericError(404, "Fees not found"));
-//   }
-
-//   const admissionFee = await billFeeModel.findOne({
-//     name: BILL_FEE_LIST[0],
-//   });
-
-//   if (!admissionFee) {
-//     return res
-//       .status(404)
-//       .json(new GenericError(404, `${BILL_FEE_LIST[0]} not found`));
-//   }
-
-//   const serviceFee = await billFeeModel.findOne({
-//     name: BILL_FEE_LIST[1],
-//   });
-//   if (!serviceFee) {
-//     return res
-//       .status(404)
-//       .json(new GenericError(404, `${BILL_FEE_LIST[1]} not found`));
-//   }
-
-//   const stationaryFee = await billFeeModel.find({
-//     class: { $in: classes },
-//     name: BILL_FEE_LIST[2],
-//   });
-
-//   if (classes.length != stationaryFee.length) {
-//     return res
-//       .status(404)
-//       .json(new GenericError(404, `${BILL_FEE_LIST[2]} not found`));
-//   }
-
-//   const deposit = await billFeeModel.findOne({
-//     name: BILL_FEE_LIST[3],
-//   });
-
-//   if (!deposit) {
-//     return res
-//       .status(404)
-//       .json(new GenericError(404, `${BILL_FEE_LIST[3]} not found`));
-//   }
-
-//   const evaluation = await billFeeModel.findOne({
-//     name: BILL_FEE_LIST[4],
-//   });
-
-//   if (!evaluation) {
-//     return res
-//       .status(404)
-//       .json(new GenericError(404, `${BILL_FEE_LIST[4]} not found`));
-//   }
-
-//   const diary = await billFeeModel.findOne({
-//     name: BILL_FEE_LIST[5],
-//   });
-
-//   if (!diary) {
-//     return res
-//       .status(404)
-//       .json(new GenericError(404, `${BILL_FEE_LIST[5]} not found`));
-//   }
-
-//   const billFees = {
-//     admissionFee,
-//     serviceFee,
-//     stationaryFee,
-//     deposit,
-//     evaluation,
-//     diary,
-//   };
-
-//   const bills = await Bill.find({
-//     "student.id": { $in: students },
-//     year,
-//     month,
-//   });
-
-//   const billsFound = [];
-//   const billsNotFound = [];
-
-//   studentRes.forEach((student) => {
-//     const bill = bills.find((b) => {
-//       return b.student.id.toString() === student._id.toString();
-//     });
-
-//     if (bill) {
-//       billsFound.push(bill);
-//     } else {
-//       const obj = {};
-//       obj.student.id = student._id.toString();
-//       console.log(obj);
-
-//       billsNotFound.push(student);
-//     }
-//   });
-
-//   return res.status(200).json(
-//     new GenericReponse(200, "Bills Fetched Successfully", {
-//       billsFound,
-//       billsNotFound,
-//     })
-//   );
-// });
+  return res.json({
+    students: studentRes,
+    bills,
+    billFee,
+    transportationFees,
+  });
+});
 
 const payBill = handleAsync(async (req, res) => {
   const { id } = req.params;
@@ -1324,6 +1238,7 @@ export {
   deleteBill,
   getBill,
   getBills,
+  getBillsOfStudentIn,
   payBill,
   printBill,
   studentBillOfYearAndMonth,

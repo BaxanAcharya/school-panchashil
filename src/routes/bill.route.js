@@ -4,6 +4,7 @@ import {
   deleteBill,
   getBill,
   getBills,
+  getBillsOfStudentIn,
   payBill,
   printBill,
   studentBillOfYearAndMonth,
@@ -24,6 +25,6 @@ router.route("/:id").get(verifyJWT, getBill);
 router.route("/:id").delete(verifyJWT, deleteBill);
 router.route("/:id").put(verifyJWT, updateBill);
 router.route("/:id/print").post(verifyJWT, printBill);
-// router.route("/:year/:month/student").get(verifyJWT, getBillsOfStudentIn);
+router.route("/:year/:month/bulk/student").get(verifyJWT, getBillsOfStudentIn);
 
 export default router;
