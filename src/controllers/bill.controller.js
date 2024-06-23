@@ -1030,14 +1030,19 @@ const printBill = handleAsync(async (req, res) => {
           : ``
       }
       </div>
-        <div>
+      ${
+        !isBill.isPaid
+          ? ` <div>
           <p>
             <strong>Total Amount in words:</strong> ${numberToWords(
               isBill.total
             )}
             Only
           </p>
-        </div>
+        </div>`
+          : ""
+      }
+       
         ${
           isBill.isPaid
             ? `<div>
