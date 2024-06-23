@@ -146,6 +146,12 @@ const billSchema = new mongoose.Schema(
         default: "Diary/ID Card",
       },
     },
+
+    discount: {
+      type: Number,
+      required: false,
+      default: 0,
+    },
     total: {
       type: Number,
       required: true,

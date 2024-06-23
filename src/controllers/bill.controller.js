@@ -345,7 +345,8 @@ const addBill = handleAsync(async (req, res) => {
   if (!unpaidBills) {
     dueAmount = isStudent?.dueAmount || 0;
   } else {
-    dueAmount = unpaidBills.total - unpaidBills.paidAmount;
+    dueAmount =
+      unpaidBills.total - unpaidBills.paidAmount - unpaidBills.discount;
   }
 
   let total = 0;
@@ -1026,6 +1027,10 @@ const printBill = handleAsync(async (req, res) => {
         <div class="total">
           <p><strong>Total :</strong> Rs ${isBill.total}</p>
         </div>
+
+        <div class="total" style="margin-left:20px">
+        <p><strong>Discount :</strong> Rs ${isBill.discount}</p>
+      </div>
         
       ${
         isBill.isPaid
@@ -1193,7 +1198,7 @@ const getBillsOfStudentIn = handleAsync(async (req, res) => {
 
 const payBill = handleAsync(async (req, res) => {
   const { id } = req.params;
-  const { paidAmount } = req.body;
+  const { paidAmount, discount } = req.body;
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return res.status(400).json(new GenericError(400, "Invalid Bill Id"));
   }
@@ -1219,10 +1224,11 @@ const payBill = handleAsync(async (req, res) => {
       .json(new GenericError(404, "Student not found for this bill"));
   }
 
-  isStudent.dueAmount = isBill.total - paidAmount;
+  isStudent.dueAmount = isBill.total - paidAmount - discount;
   await isStudent.save();
 
   isBill.isPaid = true;
+  isBill.discount = discount;
   isBill.paidAmount = paidAmount;
   isBill.url = null;
 
