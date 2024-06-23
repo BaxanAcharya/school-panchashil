@@ -1015,20 +1015,21 @@ const printBill = handleAsync(async (req, res) => {
           </thead>
           <tbody>
           ${getString(listOfFees)}
-
           </tbody>
         </table>
+     <div style="display:flex;justify-content: flex-end;"> 
         <div class="total">
           <p><strong>Total :</strong> Rs ${isBill.total}</p>
         </div>
         
       ${
         isBill.isPaid
-          ? ` <div class="total">
+          ? ` <div class="total" style="margin-left:20px">
           <p><strong>Paid :</strong> Rs ${isBill.paidAmount}</p>
         </div>`
           : ``
       }
+      </div>
         <div>
           <p>
             <strong>Total Amount in words:</strong> ${numberToWords(
