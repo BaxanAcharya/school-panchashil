@@ -644,6 +644,269 @@ const deleteBill = handleAsync(async (req, res) => {
     .json(new GenericReponse(200, "Bill Deleted Successfully", {}));
 });
 
+const bulkPrintBill = handleAsync(async (req, res) => {
+  const { year, month } = req.params;
+  const { studentIds } = req.query;
+  if (!studentIds) {
+    return res
+      .status(400)
+      .json(new GenericError(400, "Student Ids are required"));
+  }
+
+  let studentsIncoming = [];
+  if (Array.isArray(studentIds)) {
+    studentsIncoming = studentIds;
+  } else {
+    studentsIncoming = studentIds.split(",");
+  }
+
+  if (!Array.isArray(studentsIncoming)) {
+    return res
+      .status(400)
+      .json(new GenericError(400, "Student ids should be an array"));
+  }
+
+  const students = [];
+  studentsIncoming.forEach((id) => {
+    const s = students.find((s) => {
+      return s.toString() === id;
+    });
+    if (!s) {
+      students.push(id);
+    }
+  });
+  const studentRes = await Student.find({ _id: { $in: students } });
+  if (students.length != studentRes.length) {
+    return res.status(404).json(new GenericError(404, "Students not found"));
+  }
+
+  const bills = await Bill.find({
+    "student.id": { $in: students },
+    year,
+    month,
+  })
+    .populate("student.id", "fullName")
+    .populate("student.class", "name  section");
+
+  const content = bills
+    .map((isBill, index) => {
+      console.log(index === 0);
+      const listOfFees = [];
+      listOfFees.push(isBill.admissionFee);
+      listOfFees.push(isBill.serviceFee);
+      listOfFees.push(isBill.schoolFee);
+      listOfFees.push(isBill.stationaryFee);
+      listOfFees.push(isBill.deposit);
+      listOfFees.push(isBill.transportation);
+      listOfFees.push(isBill.evaluation);
+      listOfFees.push(isBill.extra);
+      listOfFees.push(isBill.due);
+      listOfFees.push(isBill.diary);
+
+      return `
+        <div class="container">
+          <img
+            src="https://panchashil.s3.amazonaws.com/logo/logo-rectangle.png"
+            width="100%"
+            height="100px"
+            style="object-fit: contain"
+            alt="School Rectangle Logo"
+          />
+          ${
+            isBill.isPaid
+              ? `<h1 style="text-align: center; margin-top:-10px">Cash Bill</h1>`
+              : `<h1 style="text-align: center; margin-top:-10px">Information Bill</h1>`
+          }
+          ${
+            isBill.isPaid
+              ? `<p style="text-align: center; margin-top:-25px">
+            Bill Number:
+            <span style="font-weight: bold">#${isBill.billNo}</span>
+          </p>`
+              : ""
+          }
+          <div class="student-info" style="margin-top:-20px !important">
+            <div>
+              <p>
+                <strong>Student Name:</strong> ${isBill.student.id.fullName}
+              </p>
+              <p>
+                <strong>Roll No:</strong> ${isBill.student.rollNo}
+              </p>
+              <p>
+                <strong>Month:</strong> ${getNepaliMonthName(isBill.month)}
+              </p>
+            </div>
+            <div>
+              <p>
+                <strong>Class:</strong> ${isBill.student.class.name} ${
+                  isBill.student.class.section
+                }
+              </p>
+              <p>
+                <strong>Date:</strong> ${convertToNepaliDate(isBill.date)}
+              </p>
+              <p>
+                <strong>Year:</strong> ${isBill.year}
+              </p>
+            </div>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>S.N</th>
+                <th>Descriptions</th>
+                <th>Amount (Rs)</th>
+                <th>Remarks</th>
+              </tr>
+            </thead>
+            <tbody>${getString(listOfFees)}</tbody>
+          </table>
+          <div style="display:flex;justify-content: flex-end;">
+            <div class="total">
+              <p><strong>Total :</strong> Rs ${isBill.total}</p>
+            </div>
+            ${
+              isBill.discount && isBill.isPaid
+                ? `<div class="total" style="margin-left:20px">
+                  <p><strong>Discount :</strong> Rs ${isBill.discount}</p>
+                </div>`
+                : ""
+            }
+            ${
+              isBill.isPaid
+                ? `<div class="total" style="margin-left:20px">
+                  <p><strong>Paid :</strong> Rs ${isBill.paidAmount}</p>
+                </div>`
+                : ""
+            }
+          </div>
+          ${
+            !isBill.isPaid
+              ? `<div>
+                <p>
+                  <strong>Total Amount in words:</strong> ${numberToWords(
+                    isBill.total
+                  )} Only
+                </p>
+              </div>`
+              : ""
+          }
+          ${
+            isBill.isPaid
+              ? `<div>
+                <p>
+                  <strong>Total Paid Amount in words:</strong> ${numberToWords(
+                    isBill.paidAmount
+                  )} Only
+                </p>  
+              </div>`
+              : ""
+          }
+          <div class="footer">
+            <p>Note: Monthly fee should be paid within ten days from the starting of every month.</p>
+            <p>For any queries, please contact the school office Number. (9855041017)</p>
+          </div>
+        </div>
+      `;
+    })
+    .join("");
+
+  const html = `<!doctype html>
+    <html lang="en">
+      <head>
+        <meta charset="UTF-8" />
+        <title>School Bill</title>
+        <style>
+          body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+          }
+          .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border: 2px solid #000; /* Add black border */
+          }
+  
+          h1 {
+            text-align: center;
+            color: #333;
+          }
+  
+          .student-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+          }
+  
+          .student-info p {
+            margin: 5px 0;
+          }
+  
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            border: 1px solid black;
+          }
+  
+          th,
+          td {
+            padding: 8px;
+            text-align: left;
+            border: 1px solid black;
+  
+          }
+  
+          .total {
+            margin-top: 20px;
+            text-align: right;
+          }
+  
+          .footer {
+            margin-top: 10px;
+            text-align: center;
+            color: #010000;
+          }
+  
+          .monthly-bill-info {
+            border-top: 2px solid #000;
+            margin-top: 20px;
+            padding-top: 20px;
+          }
+  
+          .monthly-bill-info h2 {
+            text-align: center;
+            font-weight: bold;
+            text-decoration: underline;
+          }
+  
+          .monthly-bill-info p {
+            text-align: center;
+          }
+  
+          .bill-date {
+            text-align: right;
+            color: #888;
+          }
+        </style>
+      </head>
+      <body>
+      ${content}
+      </body>
+    </html> `;
+
+  res
+    .status(200)
+    .json(new GenericReponse(200, "Bills Fetched Successfully", html));
+});
+
 const printBill = handleAsync(async (req, res) => {
   const { id } = req.params;
   if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -656,13 +919,6 @@ const printBill = handleAsync(async (req, res) => {
   if (!isBill) {
     return res.status(404).json(new GenericError(404, "Bill not found"));
   }
-
-  // if (isBill.url) {
-  //   return res
-  //     .status(200)
-  //     .json(new GenericReponse(200, "Bill Printed Successfully", isBill.url));
-  // }
-
   const listOfFees = [];
   listOfFees.push(isBill.admissionFee);
   listOfFees.push(isBill.serviceFee);
@@ -1279,6 +1535,7 @@ const addBulkBill = handleAsync(async (req, res) => {
 export {
   addBill,
   addBulkBill,
+  bulkPrintBill,
   deleteBill,
   getBill,
   getBills,

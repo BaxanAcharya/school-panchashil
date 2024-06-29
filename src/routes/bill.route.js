@@ -2,6 +2,7 @@ import { Router } from "express";
 import {
   addBill,
   addBulkBill,
+  bulkPrintBill,
   deleteBill,
   getBill,
   getBills,
@@ -26,6 +27,7 @@ router.route("/:id").get(verifyJWT, getBill);
 router.route("/:id").delete(verifyJWT, deleteBill);
 router.route("/:id").put(verifyJWT, updateBill);
 router.route("/:id/print").post(verifyJWT, printBill);
+router.route("/:year/:month/bulk/print").post(verifyJWT, bulkPrintBill);
 router.route("/:year/:month/bulk/student").get(verifyJWT, getBillsOfStudentIn);
 
 export default router;
