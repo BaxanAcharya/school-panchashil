@@ -1,6 +1,4 @@
 import mongoose from "mongoose";
-import path from "path";
-import { fileURLToPath } from "url";
 import { BILL_FEE_LIST } from "../constant.js";
 import Bill from "../models/bill.model.js";
 import billFeeModel from "../models/billFee.model.js";
@@ -9,14 +7,12 @@ import { Student } from "../models/student.model.js";
 import { TransportationArea } from "../models/transportation.model.js";
 import { GenericError } from "../utils/GenericError.js";
 import { GenericReponse } from "../utils/GenericResponse.js";
-import { uplaodOnBucket } from "../utils/bucket.js";
 import { handleAsync } from "../utils/handleAsync.js";
 import {
   convertToNepaliDate,
   getNepaliMonthName,
 } from "../utils/nepaliDate.js";
 import numberToWords from "../utils/numberToWord.js";
-import { generatePDF } from "../utils/pdf.js";
 import { validateMonth, validateYear } from "../validation/bill.validation.js";
 const getString = (data) => {
   let rows = "";
@@ -661,11 +657,11 @@ const printBill = handleAsync(async (req, res) => {
     return res.status(404).json(new GenericError(404, "Bill not found"));
   }
 
-  if (isBill.url) {
-    return res
-      .status(200)
-      .json(new GenericReponse(200, "Bill Printed Successfully", isBill.url));
-  }
+  // if (isBill.url) {
+  //   return res
+  //     .status(200)
+  //     .json(new GenericReponse(200, "Bill Printed Successfully", isBill.url));
+  // }
 
   const listOfFees = [];
   listOfFees.push(isBill.admissionFee);
@@ -737,7 +733,7 @@ const printBill = handleAsync(async (req, res) => {
         }
 
         .footer {
-          margin-top: 20px;
+          margin-top: 10px;
           text-align: center;
           color: #010000;
         }
@@ -775,12 +771,12 @@ const printBill = handleAsync(async (req, res) => {
         />
         ${
           isBill.isPaid
-            ? `<h1 style="text-align: center;">Cash Bill</h1>`
-            : `<h1 style="text-align: center;">Information Bill</h1>`
+            ? `<h1 style="text-align: center; margin-top:-10px">Cash Bill</h1>`
+            : `<h1 style="text-align: center; margin-top:-10px">Information Bill</h1>`
         }
         ${
           isBill.isPaid
-            ? `<p style="text-align: center">
+            ? `<p style="text-align: center; margin-top:-25px">
           Bill Number:
           <span style="font-weight: bold"
             >#${isBill.billNo}</span
@@ -789,7 +785,7 @@ const printBill = handleAsync(async (req, res) => {
             : ""
         }
 
-        <div class="student-info">
+        <div class="student-info" style="margin-top:-20px !important">
           <div>
             <p><strong>Student Name:</strong> ${isBill.student.id.fullName}</p>
             <p><strong>Roll No:</strong>${isBill.student.rollNo}</p>
@@ -878,35 +874,22 @@ const printBill = handleAsync(async (req, res) => {
             For any queries, please contact the school office Number. (9855041017)
           </p>
         </div>
-        <div style="display: flex; align-items: center; justify-content: center">
-        <p>Signature:</p>
-        <span style="margin-top: 7px; margin-left: 5px; font-weight: bold">
-          ---------------------------</span
-        >
-      </div>
+        
       </div>
     </body>
   </html> `;
 
-  generatePDF(html, `${id}.pdf`)
-    .then(async () => {
-      const __dirname = fileURLToPath(import.meta.url);
-      const filePath = path.join(__dirname, `../../../public/temp/${id}.pdf`);
-      const pathUrl = await uplaodOnBucket(filePath);
-      isBill.url = pathUrl;
-      await isBill.save();
-      res
-        .status(200)
-        .json(new GenericReponse(200, "Bill Printed Successfully", isBill.url));
-    })
-    .catch((err) => {
-      res
-        .status(500)
-        .json(
-          new GenericError(500, err.message || "Error while printing bill")
-        );
-    });
+  return res.status(200).json(new GenericReponse(200, "Bill Created", html));
 });
+
+{
+  /* <div style="display: flex; align-items: center; justify-content: center; margin-top:-30px">
+        <p>Signature:</p>
+        <span style="margin-top: 7px; margin-left: 5px; font-weight: bold">
+          ---------------------------</span
+        >
+      </div> */
+}
 
 const getBillsOfStudentIn = handleAsync(async (req, res) => {
   const { year, month } = req.params;
