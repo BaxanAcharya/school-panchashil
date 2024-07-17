@@ -12,7 +12,6 @@ import { GenericReponse } from "../utils/GenericResponse.js";
 import { getGpa, getGrade, getRemarks } from "../utils/Grading.js";
 import { uplaodOnBucket } from "../utils/bucket.js";
 import { handleAsync } from "../utils/handleAsync.js";
-import { generatePDF } from "../utils/pdf.js";
 import {
   validAttendence,
   validBulkResult,
@@ -697,28 +696,9 @@ const printMarkSheet = handleAsync(async (req, res) => {
     </body>
   </html>`;
   //print the mark sheet and save the pdf in the database and return the url
-
-  generatePDF(html, `marksheet-${result._id}.pdf`)
-    .then(async () => {
-      const __dirname = fileURLToPath(import.meta.url);
-      const filePath = path.join(
-        __dirname,
-        `../../../public/temp/marksheet-${id}.pdf`
-      );
-      const pathUrl = await uplaodOnBucket(filePath);
-      result.url = pathUrl;
-      await result.save();
-      res
-        .status(200)
-        .json(new GenericReponse(200, "Bill Printed Successfully", result));
-    })
-    .catch((err) => {
-      res
-        .status(500)
-        .json(
-          new GenericError(500, err.message || "Error while printing bill")
-        );
-    });
+  return res
+    .status(200)
+    .json(new GenericReponse(200, "MarkSheet Fetched Successfully", html));
 });
 const generateLedger = handleAsync(async (req, res) => {
   const { examId, classId } = req.params;

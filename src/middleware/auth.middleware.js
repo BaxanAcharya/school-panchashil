@@ -25,6 +25,6 @@ export const verifyJWT = handleAsync(async (req, res, next) => {
     console.log(error);
     return res
       .status(401)
-      .json(GenericError(401, error?.message || "Invalid access token"));
+      .json(new GenericError(401, error?.message || "Invalid access token"));
   }
 });
