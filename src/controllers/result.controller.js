@@ -668,27 +668,25 @@ const printMarkSheet = handleAsync(async (req, res) => {
             </table>
           </div>
         </div>
-  
-        <div class="total">
+
+      
+        <div style="display:flex; justify-content: space-between;">
+         <p><strong>GPA:</strong> ${result.gpa}</p>
+           <p ><strong>Grade :</strong> ${result.grade}</p>
           <p><strong>Total Marks Obtained:</strong> ${result.total}</p>
         </div>
-        <hr class="divider"/>
-        <div class="student-info">
+  
+      
+        <div class="student-info" style="margin-top:-15px;" >
           <div>
-            <p><strong>GPA:</strong> ${result.gpa}</p>
             <p><strong> Remarks:</strong> ${result.remarks}</p>
           </div>
           <div>
-            <p style="margin-top: 10px"><strong>Grade :</strong> ${
-              result.grade
-            }</p>
-            <p style="margin-top: 10px"><strong> Attendence:</strong> ${
-              result.attendence
-            } days</p>
+            <p ><strong> Attendence:</strong> ${result.attendence} days</p>
           </div>
         </div>
   
-        <div class="student-info" style="margin-top:-10px;">
+        <div class="student-info" style="margin-top:-25px;">
             <p style="margin-top: 0px">Class Teacher</p>
             <p style="margin-top: 0px">Principal</p>
         </div>
