@@ -7,6 +7,7 @@ import {
   getResultById,
   getResults,
   getResultsOfStudentIn,
+  printBulkMarkSheet,
   printMarkSheet,
   updateResult,
 } from "../controllers/result.controller.js";
@@ -21,6 +22,7 @@ router.route("/:id").get(verifyJWT, getResultById);
 router.route("/:id").delete(verifyJWT, deleteResult);
 router.route("/:id").put(verifyJWT, updateResult);
 router.route("/:id/print").post(verifyJWT, printMarkSheet);
+router.route("/:examId/:classId/bulk").post(verifyJWT, printBulkMarkSheet);
 router.route("/:examId/:classId/ledger").post(verifyJWT, generateLedger);
 router.route("/:examId/student").get(verifyJWT, getResultsOfStudentIn);
 export default router;

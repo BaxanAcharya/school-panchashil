@@ -430,6 +430,325 @@ const updateResult = handleAsync(async (req, res) => {
     .status(200)
     .json(new GenericReponse(200, "Result updated", result));
 });
+
+const printBulkMarkSheet = handleAsync(async (req, res) => {
+  const { examId, classId } = req.params;
+  const { studentIds } = req.query;
+  if (!mongoose.Types.ObjectId.isValid(examId)) {
+    return res.status(400).json(new GenericError(400, "Invalid exam id"));
+  }
+  if (!studentIds) {
+    return res
+      .status(400)
+      .json(new GenericError(400, "Student ids are required"));
+  }
+  let studentsIncoming = [];
+  if (Array.isArray(studentIds)) {
+    studentsIncoming = studentIds;
+  } else {
+    studentsIncoming = studentIds.split(",");
+  }
+
+  if (!Array.isArray(studentsIncoming)) {
+    return res
+      .status(400)
+      .json(new GenericError(400, "Student ids should be an array"));
+  }
+
+  const students = [];
+  studentsIncoming.forEach((id) => {
+    const s = students.find((s) => {
+      return s.toString() === id;
+    });
+    if (!s) {
+      students.push(id);
+    }
+  });
+
+  const isExam = await Exam.findById(examId);
+  if (!isExam) {
+    return res.status(404).json(new GenericError(404, "Exam not found"));
+  }
+
+  const isClass = await Class.findById(classId);
+  if (!isClass) {
+    return res.status(404).json(new GenericError(404, "Class not found"));
+  }
+
+  const studentRes = await Student.find({ _id: { $in: students } });
+  if (students.length != studentRes.length) {
+    return res.status(404).json(new GenericError(404, "Students not found"));
+  }
+
+  const results = await Result.find({
+    "student.id": { $in: students },
+    exam: examId,
+    class: classId,
+  })
+    .populate("student.id", "fullName fatherName")
+    .populate("class", "name section")
+    .populate("exam", "name year");
+
+  if (!results) {
+    return res.status(500).json(new GenericError(500, "Internal server error"));
+  }
+
+  const content = results
+    .map((result) => {
+      return ` <div class="container">
+        <img
+          src="https://panchashil.s3.amazonaws.com/logo/logo-rectangle.png"
+          width="100%"
+          height="100px"
+          style="object-fit: contain"
+          alt="School Rectangle Logo"
+        />
+        <p
+          style="
+            text-align: center;
+            font-weight: bold;
+            margin-top: 10px;
+            font-size: large;
+          "
+        >
+         ${result.exam.name} ${result.exam.year}
+        </p>
+        <p
+          style="
+            text-align: center;
+            font-weight: bold;
+            margin-top: -10px;
+            font-size: x-large;
+            color: #0d7285;
+          "
+        >
+          Student's Progress Report
+        </p>
+        <div class="student-info" style="margin-top:-15px;">
+          <div>
+            <p><strong> Name:</strong> ${result.student.id.fullName}</p>
+            <p><strong>Class:</strong> ${result.class.name} ${
+              result.class.section || ""
+            }</p>
+          </div>
+          <div>
+            <p><strong>Father's Name:</strong> ${
+              result.student.id.fatherName
+            }</p>
+            <p><strong> Roll No:</strong> ${result.student.rollNo}</p>
+          </div>
+        </div>
+        <hr class="divider" />
+        <div style="display: flex">
+          <table>
+            <thead>
+              <tr>
+                <th>S.N</th>
+                <th>Subject</th>
+                <th>Grade</th>
+                <th>GPA</th>
+              </tr>
+            </thead>
+            <tbody>
+             ${getString(result.marks)}
+            </tbody>
+          </table>
+          <div>
+            <img
+              src="https://panchashil.s3.amazonaws.com/logo/logo-circel.png"
+              height="150px"
+              width="150px"
+              style="object-fit: contain; margin-left: 100px"
+              alt="Circle logo"
+            />
+            <table style="margin-left: 10px">
+              <thead>
+                <tr>
+                  <th>Interval in %</th>
+                  <th>Grade</th>
+                  <th>Description</th>
+                  <th>Grade Point</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>90 to 100</td>
+                  <td>A+</td>
+                  <td>Outstanding</td>
+                  <td>4</td>
+                </tr>
+                <tr>
+                  <td>80 to 90</td>
+                  <td>A</td>
+                  <td>Excellent</td>
+                  <td>3.6</td>
+                </tr>
+                <tr>
+                  <td>70 to 80</td>
+                  <td>B+</td>
+                  <td>Very Good</td>
+                  <td>3.2</td>
+                </tr>
+                <tr>
+                  <td>60 to 70</td>
+                  <td>B</td>
+                  <td>Good</td>
+                  <td>2.8</td>
+                </tr>
+                <tr>
+                  <td>50 to 60</td>
+                  <td>C+</td>
+                  <td>Satisfactory</td>
+                  <td>2.4</td>
+                </tr>
+                <tr>
+                  <td>40 to 50</td>
+                  <td>C</td>
+                  <td>Acceptable</td>
+                  <td>2</td>
+                </tr>
+                <tr>
+                  <td>35 to 40</td>
+                  <td>D</td>
+                  <td>Basic</td>
+                  <td>1.6</td>
+                </tr>
+                <tr>
+                  <td>Below 35</td>
+                  <td>NA</td>
+                  <td>Not Applicable</td>
+                  <td>-</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      
+        <div style="display:flex; justify-content: space-between;">
+         <p><strong>GPA:</strong> ${result.gpa}</p>
+           <p ><strong>Grade :</strong> ${result.grade}</p>
+          <p><strong>Total Marks Obtained:</strong> ${result.total}</p>
+        </div>
+  
+      
+        <div class="student-info" style="margin-top:-15px;" >
+          <div>
+            <p><strong> Remarks:</strong> ${result.remarks}</p>
+          </div>
+          <div>
+            <p ><strong> Attendence:</strong> ${result.attendence} days</p>
+          </div>
+        </div>
+  
+        <div class="student-info" style="margin-top:-25px;">
+            <p style="margin-top: 0px">Class Teacher</p>
+            <p style="margin-top: 0px">Principal</p>
+        </div>
+      </div>`;
+    })
+    .join("");
+
+  const html = `<!doctype html>
+  <html lang="en">
+    <head>
+      <meta charset="UTF-8" />
+      <title>School Bill</title>
+      <style>
+        body {
+          font-family: Arial, sans-serif;
+          margin: 0;
+          padding: 20px;
+          background-color: #f4f4f4;
+        }
+        .container {
+          max-width: 665px;
+          margin: 0 auto;
+          background-color: #fff;
+          padding: 20px;
+          border-radius: 8px;
+          box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+          border: 2px solid #000; /* Add black border */
+        }
+  
+        h1 {
+          text-align: center;
+          color: #333;
+        }
+  
+        .student-info {
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 20px;
+        }
+  
+        .student-info p {
+          margin: 5px 0;
+        }
+  
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          margin-top: 20px;
+          border: 1px solid black;
+        }
+  
+        th,
+        td {
+          padding: 8px;
+          text-align: left;
+          border: 1px solid black;
+        }
+  
+        .total {
+          margin-top: 20px;
+          text-align: right;
+        }
+  
+        .footer {
+          margin-top: 20px;
+          text-align: center;
+          color: #888;
+        }
+  
+        .monthly-bill-info {
+          border-top: 2px solid #000;
+          margin-top: 20px;
+          padding-top: 20px;
+        }
+  
+        .monthly-bill-info h2 {
+          text-align: center;
+          font-weight: bold;
+          text-decoration: underline;
+        }
+  
+        .monthly-bill-info p {
+          text-align: center;
+        }
+  
+        .bill-date {
+          text-align: right;
+          color: #888;
+        }
+
+        .divider {
+          height: 2px; 
+          border: none; 
+          background-color: black;
+        }
+      </style>
+    </head>
+    <body>
+     ${content}
+    </body>
+  </html>`;
+
+  res
+    .status(200)
+    .json(new GenericReponse(200, "Marksheet Fetched Successfully", html));
+});
+
 const printMarkSheet = handleAsync(async (req, res) => {
   const { id } = req.params;
   if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -442,13 +761,6 @@ const printMarkSheet = handleAsync(async (req, res) => {
   if (!result) {
     return res.status(404).json(new GenericError(404, "Result not found"));
   }
-
-  if (result.url) {
-    return res
-      .status(200)
-      .json(new GenericReponse(200, "Bill Printed Successfully", result));
-  }
-
   const html = `<!doctype html>
   <html lang="en">
     <head>
@@ -823,6 +1135,7 @@ export {
   addResultBulk,
   deleteResult,
   generateLedger,
+  printBulkMarkSheet,
   getResultById,
   getResults,
   getResultsOfStudentIn,

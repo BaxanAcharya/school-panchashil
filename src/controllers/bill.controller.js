@@ -689,7 +689,7 @@ const bulkPrintBill = handleAsync(async (req, res) => {
     .populate("student.class", "name  section");
 
   const content = bills
-    .map((isBill, index) => {
+    .map((isBill) => {
       const listOfFees = [];
       listOfFees.push(isBill.admissionFee);
       listOfFees.push(isBill.serviceFee);
