@@ -458,6 +458,21 @@ const getBills = handleAsync(async (req, res) => {
     .json(new GenericReponse(200, "Bills Fetched Successfully", bills));
 });
 
+const getBillOfClassYearMonth = handleAsync(async (req, res) => {
+  const { class: classId, year, month } = req.params;
+  if (!mongoose.Types.ObjectId.isValid(classId)) {
+    return res.status(400).json(new GenericError(400, "Invalid Class Id"));
+  }
+
+  const bills = await Bill.find({ "student.class": classId, year, month })
+    .populate("student.id", "fullName")
+    .populate("student.class", "name section");
+
+  return res
+    .status(200)
+    .json(new GenericReponse(200, "Bills Fetched Successfully", bills));
+});
+
 const getBill = handleAsync(async (req, res) => {
   const { id } = req.params;
   if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -1537,6 +1552,7 @@ export {
   bulkPrintBill,
   deleteBill,
   getBill,
+  getBillOfClassYearMonth,
   getBills,
   getBillsOfStudentIn,
   payBill,

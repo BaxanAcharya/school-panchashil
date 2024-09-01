@@ -5,6 +5,7 @@ import {
   bulkPrintBill,
   deleteBill,
   getBill,
+  getBillOfClassYearMonth,
   getBills,
   getBillsOfStudentIn,
   payBill,
@@ -23,6 +24,9 @@ router.route("/").post(verifyJWT, addBill);
 router.route("/:id/pay", verifyJWT).put(verifyJWT, payBill);
 router.route("/:year/:month/bulk/student").post(verifyJWT, addBulkBill);
 router.route("/").get(verifyJWT, getBills);
+router
+  .route("/class/:class/:year/:month")
+  .get(verifyJWT, getBillOfClassYearMonth);
 router.route("/:id").get(verifyJWT, getBill);
 router.route("/:id").delete(verifyJWT, deleteBill);
 router.route("/:id").put(verifyJWT, updateBill);
