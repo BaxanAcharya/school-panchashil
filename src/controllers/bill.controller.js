@@ -1152,15 +1152,6 @@ const printBill = handleAsync(async (req, res) => {
   return res.status(200).json(new GenericReponse(200, "Bill Created", html));
 });
 
-{
-  /* <div style="display: flex; align-items: center; justify-content: center; margin-top:-30px">
-        <p>Signature:</p>
-        <span style="margin-top: 7px; margin-left: 5px; font-weight: bold">
-          ---------------------------</span
-        >
-      </div> */
-}
-
 const getBillsOfStudentIn = handleAsync(async (req, res) => {
   const { year, month } = req.params;
   const { studentIds } = req.query;
@@ -1196,6 +1187,24 @@ const getBillsOfStudentIn = handleAsync(async (req, res) => {
   if (students.length != studentRes.length) {
     return res.status(404).json(new GenericError(404, "Students not found"));
   }
+
+  const lastBills = await Promise.all(
+    studentRes.map(async (student) => {
+      return await Bill.findOne({ "student.id": student._id }).sort({
+        createdAt: -1,
+      });
+    })
+  );
+  const validLastBills = lastBills.filter((bill) => bill !== null);
+  studentRes.forEach((student) => {
+    const bill = validLastBills.find((b) => {
+      return b.student.id.toString() === student._id.toString();
+    });
+    if (bill && !bill.isPaid) {
+      student.dueAmount = bill.total - bill.paidAmount - bill.discount;
+    }
+  });
+
   const classes = [];
 
   studentRes.forEach((student) => {
@@ -1226,7 +1235,6 @@ const getBillsOfStudentIn = handleAsync(async (req, res) => {
     year,
     month,
   });
-
   const billFee = await billFeeModel.find();
 
   const transportations = [];
@@ -1458,6 +1466,7 @@ const addBulkBill = handleAsync(async (req, res) => {
     billNo = lastBill.billNo + 1;
   }
   const newBills = [];
+  const newDueStudents = [];
   cleanStudentsObject.forEach(async (student) => {
     const isAvaliable = bills.find((bill) => {
       return bill.student.id.toString() === student.student.toString();
@@ -1526,12 +1535,19 @@ const addBulkBill = handleAsync(async (req, res) => {
         billNo++;
 
         newBills.push(obj);
+        isStudent.dueAmount = obj.due.amount;
+        newDueStudents.push(isStudent);
       }
     }
   });
 
   try {
     const savedBills = await Bill.insertMany(newBills);
+    await Promise.all(
+      newDueStudents.map(async (student) => {
+        return await Student.findByIdAndUpdate(student._id, student);
+      })
+    );
     return res
       .status(201)
       .json(
