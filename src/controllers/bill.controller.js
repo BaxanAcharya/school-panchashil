@@ -433,6 +433,9 @@ const getBills = handleAsync(async (req, res) => {
   const billAggregate = Bill.aggregate([
     {
       $match: {
+        ...(req.query.isPaid !== undefined
+          ? { isPaid: req.query.isPaid === "true" } // Converts string to boolean
+          : {}),
         ...(req.query.studentId
           ? { "student.id": new mongoose.Types.ObjectId(req.query.studentId) }
           : {}),
