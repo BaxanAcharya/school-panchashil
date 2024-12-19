@@ -123,6 +123,7 @@ const getSubjects = handleAsync(async (req, res) => {
           _id: 1,
           name: 1,
           displayOrder: 1,
+          fullMarks: 1,
           classValues: 1, // Retain the classValues field
         },
       },
