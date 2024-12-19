@@ -249,9 +249,70 @@ const deleteSubjectById = handleAsync(async (req, res) => {
   return res.status(200).json(new GenericReponse(200, "Subject deleted", {}));
 });
 
+const getSubjectByClassId = handleAsync(async (req, res) => {
+  const { classId } = req.params;
+  if (!mongoose.isValidObjectId(classId)) {
+    return res
+      .status(400)
+      .json(new GenericError(400, "Class id is not valid."));
+  }
+
+  const subjects = await Subject.aggregate([
+    {
+      $match: {
+        class: new mongoose.Types.ObjectId(classId),
+      },
+    },
+    {
+      $lookup: {
+        from: "classes",
+        localField: "class",
+        foreignField: "_id",
+        as: "classValues",
+        pipeline: [
+          {
+            $project: {
+              createdAt: 0,
+              updatedAt: 0,
+              __v: 0,
+            },
+          },
+        ],
+      },
+    },
+    {
+      $addFields: {
+        classValues: {
+          $first: "$classValues",
+        },
+      },
+    },
+    {
+      $project: {
+        __v: 0,
+        class: 0,
+      },
+    },
+    {
+      $sort: {
+        displayOrder: 1,
+      },
+    },
+  ]);
+  if (!subjects) {
+    return res
+      .status(500)
+      .json(new GenericError(500, "Error while fetching subjects."));
+  }
+  return res
+    .status(200)
+    .json(new GenericReponse(200, "Subjects fetched successfully", subjects));
+});
+
 export {
   addSubject,
   deleteSubjectById,
+  getSubjectByClassId,
   getSubjectById,
   getSubjects,
   updateSubjectById,
