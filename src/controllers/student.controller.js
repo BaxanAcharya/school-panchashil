@@ -477,7 +477,6 @@ const getLeftStudents = handleAsync(async (req, res) => {
       .json(new GenericError(500, "Error while fetching students"));
   }
 
-  console.log(students, "students");
   return res
     .status(200)
     .json(

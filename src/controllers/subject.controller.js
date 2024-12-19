@@ -82,7 +82,6 @@ const addSubject = handleAsync(async (req, res) => {
 
 const getSubjects = handleAsync(async (req, res) => {
   const { options, dir } = handlePaginationParams(req);
-  console.log(req.query);
   const subjects = await Subject.aggregatePaginate(
     Subject.aggregate([
       {
