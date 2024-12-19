@@ -9,6 +9,10 @@ import { GenericError } from "../utils/GenericError.js";
 import { GenericReponse } from "../utils/GenericResponse.js";
 import { handleAsync } from "../utils/handleAsync.js";
 import {
+  handlePaginationParams,
+  makePaginatedResponse,
+} from "../utils/HandlePagination.js";
+import {
   convertToNepaliDate,
   getNepaliMonthName,
 } from "../utils/nepaliDate.js";
@@ -425,37 +429,120 @@ const addBill = handleAsync(async (req, res) => {
 });
 
 const getBills = handleAsync(async (req, res) => {
-  const query = {};
-  const { studentId } = req.query;
-  if (studentId) {
-    if (!mongoose.Types.ObjectId.isValid(studentId)) {
-      return res.status(400).json(new GenericError(400, "Invalid Student Id"));
-    }
-    query["student.id"] = studentId;
-  }
-  const { classId } = req.query;
-  if (classId) {
-    if (!mongoose.Types.ObjectId.isValid(classId)) {
-      return res.status(400).json(new GenericError(400, "Invalid Class Id"));
-    }
-    query["student.class"] = classId;
-  }
-  const { year } = req.query;
-  if (year) {
-    query.year = year;
-  }
-  const { month } = req.query;
-  if (month) {
-    query.month = month;
-  }
+  const { options, dir } = handlePaginationParams(req);
+  const billAggregate = Bill.aggregate([
+    {
+      $match: {
+        ...(req.query.studentId
+          ? { "student.id": new mongoose.Types.ObjectId(req.query.studentId) }
+          : {}),
+        ...(req.query.classId
+          ? { "student.class": new mongoose.Types.ObjectId(req.query.classId) }
+          : {}),
+        ...(req.query.year ? { year: parseInt(req.query.year) } : {}),
+        ...(req.query.month ? { month: parseInt(req.query.month) } : {}),
+      },
+    },
+    {
+      $lookup: {
+        from: "students", // Name of the students collection
+        localField: "student.id",
+        foreignField: "_id",
+        as: "studentDetails",
+      },
+    },
+    {
+      $lookup: {
+        from: "classes", // Name of the classes collection
+        localField: "student.class",
+        foreignField: "_id",
+        as: "classDetails",
+      },
+    },
+    {
+      $unwind: {
+        path: "$studentDetails",
+        preserveNullAndEmptyArrays: true, // Allow for empty or null matches
+      },
+    },
+    {
+      $unwind: {
+        path: "$classDetails",
+        preserveNullAndEmptyArrays: true, // Allow for empty or null matches
+      },
+    },
+    {
+      $match: {
+        ...(req.query.name
+          ? {
+              "studentDetails.fullName": {
+                $regex: req.query.name,
+                $options: "i",
+              },
+            }
+          : {}),
+      },
+    },
+    {
+      $project: {
+        "student.id": {
+          _id: "$studentDetails._id",
+          fullName: "$studentDetails.fullName",
+        },
+        "student.class": {
+          _id: "$classDetails._id",
+          name: "$classDetails.name",
+          section: "$classDetails.section",
+        },
+        "student.rollNo": 1,
+        admissionFee: 1,
+        serviceFee: 1,
+        schoolFee: 1,
+        stationaryFee: 1,
+        deposit: 1,
+        transportation: 1,
+        evaluation: 1,
+        extra: 1,
+        due: 1,
+        diary: 1,
+        _id: 1,
+        billNo: 1,
+        date: 1,
+        month: 1,
+        year: 1,
+        total: 1,
+        url: 1,
+        isPaid: 1,
+        paidAmount: 1,
+        createdAt: 1,
+        updatedAt: 1,
+        discount: 1,
+      },
+    },
+    {
+      $sort: {
+        billNo: dir,
+      },
+    },
+  ]);
 
-  const bills = await Bill.find(query)
-    .populate("student.id", "fullName")
-    .populate("student.class", "name section");
+  const bills = await Bill.aggregatePaginate(billAggregate, options);
+
+  if (!bills) {
+    return res
+      .status(500)
+      .json(new GenericError(500, "Error while fetching bills"));
+  }
 
   return res
     .status(200)
-    .json(new GenericReponse(200, "Bills Fetched Successfully", bills));
+    .json(
+      new GenericReponse(
+        200,
+        "Bills Fetched Successfully",
+        makePaginatedResponse(bills, dir)
+      )
+    );
 });
 
 const getBillOfClassYearMonth = handleAsync(async (req, res) => {

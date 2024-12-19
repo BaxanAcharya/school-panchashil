@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2";
 import { NEPALI_MONTHS } from "../constant.js";
 const billSchema = new mongoose.Schema(
   {
@@ -175,5 +176,7 @@ const billSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+billSchema.plugin(mongooseAggregatePaginate);
 
 export default mongoose.model("Bill", billSchema);
