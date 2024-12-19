@@ -297,7 +297,6 @@ const addResultBulk = handleAsync(async (req, res) => {
       .status(201)
       .json(new GenericReponse(201, "Results added", [result, ...newResult]));
   } catch (error) {
-    console.log(error);
     return res.status(500).json(new GenericError(500, error?.messag));
   }
 });

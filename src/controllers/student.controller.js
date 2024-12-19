@@ -5,6 +5,11 @@ import { TransportationArea } from "../models/transportation.model.js";
 import { GenericError } from "../utils/GenericError.js";
 import { GenericReponse } from "../utils/GenericResponse.js";
 import { handleAsync } from "../utils/handleAsync.js";
+
+import {
+  handlePaginationParams,
+  makePaginatedResponse,
+} from "../utils/HandlePagination.js";
 import {
   validateAdmissionDate,
   validateClass,
@@ -325,11 +330,18 @@ const updateStudentById = handleAsync(async (req, res) => {
     );
 });
 
-const getStudents = handleAsync(async (_, res) => {
-  const students = await Student.aggregate([
+const getStudents = handleAsync(async (req, res) => {
+  const { options, dir } = handlePaginationParams(req);
+  const studentsAggregate = Student.aggregate([
     {
       $match: {
         hasLeft: false,
+        ...(req.query.class
+          ? { class: new mongoose.Types.ObjectId(req.query.class) }
+          : {}),
+        ...(req.query.fullName
+          ? { fullName: { $regex: req.query.fullName, $options: "i" } } // Case-insensitive search
+          : {}),
       },
     },
     {
@@ -389,21 +401,33 @@ const getStudents = handleAsync(async (_, res) => {
     },
     {
       $sort: {
-        rollNumber: 1,
+        rollNumber: dir, // Ensure "dir" is defined as 1 (asc) or -1 (desc)
       },
     },
   ]);
+
+  // Use aggregatePaginate for pagination
+  const students = await Student.aggregatePaginate(studentsAggregate, options);
+
   if (!students) {
     return res
       .status(500)
       .json(new GenericError(500, "Error while fetching students"));
   }
+
   return res
     .status(200)
-    .json(new GenericReponse(200, "Students fetched successfully", students));
+    .json(
+      new GenericReponse(
+        200,
+        "Students fetched successfully",
+        makePaginatedResponse(students, dir)
+      )
+    );
 });
-const getLeftStudents = handleAsync(async (_, res) => {
-  const students = await Student.aggregate([
+const getLeftStudents = handleAsync(async (req, res) => {
+  const { dir, options } = handlePaginationParams(req);
+  const studentsPipeline = Student.aggregate([
     {
       $match: {
         hasLeft: true,
@@ -441,19 +465,27 @@ const getLeftStudents = handleAsync(async (_, res) => {
     },
     {
       $sort: {
-        rollNumber: 1,
+        rollNumber: dir,
       },
     },
   ]);
+
+  const students = await Student.aggregatePaginate(studentsPipeline, options);
   if (!students) {
     return res
       .status(500)
       .json(new GenericError(500, "Error while fetching students"));
   }
+
+  console.log(students, "students");
   return res
     .status(200)
     .json(
-      new GenericReponse(200, "Left Student fetched successfully", students)
+      new GenericReponse(
+        200,
+        "Left Student fetched successfully",
+        makePaginatedResponse(students, dir)
+      )
     );
 });
 
