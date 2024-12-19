@@ -16,7 +16,6 @@ const uplaodOnBucket = async (filePath) => {
     fs.unlinkSync(filePath);
     return fileRepose.secure_url;
   } catch (error) {
-    console.log("error", error);
     fs.unlinkSync(filePath);
     return null;
   }

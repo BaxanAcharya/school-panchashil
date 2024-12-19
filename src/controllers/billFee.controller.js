@@ -124,7 +124,6 @@ const addBillFee = handleAsync(async (req, res) => {
       .status(201)
       .json(new GenericReponse(201, "Bill fee Created SuccessFully", billFee));
   } catch (error) {
-    console.log(error);
     res
       .status(400)
       .json(new GenericError(500, "Error while creating bill fee"));
@@ -143,7 +142,6 @@ const getBillFees = handleAsync(async (_, res) => {
         new GenericReponse(200, "Bill Fees fetched successfully", billFees)
       );
   } catch (error) {
-    console.log(error);
     return res
       .status(500)
       .json(new GenericError(500, "Error while fetching bill fees"));

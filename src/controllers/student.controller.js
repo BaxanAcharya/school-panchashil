@@ -5,6 +5,7 @@ import { TransportationArea } from "../models/transportation.model.js";
 import { GenericError } from "../utils/GenericError.js";
 import { GenericReponse } from "../utils/GenericResponse.js";
 import { handleAsync } from "../utils/handleAsync.js";
+
 import {
   handlePaginationParams,
   makePaginatedResponse,
@@ -331,10 +332,16 @@ const updateStudentById = handleAsync(async (req, res) => {
 
 const getStudents = handleAsync(async (req, res) => {
   const { options, dir } = handlePaginationParams(req);
-  const studentsAggregate = await Student.aggregate([
+  const studentsAggregate = Student.aggregate([
     {
       $match: {
         hasLeft: false,
+        ...(req.query.class
+          ? { class: new mongoose.Types.ObjectId(req.query.class) }
+          : {}),
+        ...(req.query.fullName
+          ? { fullName: { $regex: req.query.fullName, $options: "i" } } // Case-insensitive search
+          : {}),
       },
     },
     {
@@ -394,12 +401,14 @@ const getStudents = handleAsync(async (req, res) => {
     },
     {
       $sort: {
-        rollNumber: dir,
+        rollNumber: dir, // Ensure "dir" is defined as 1 (asc) or -1 (desc)
       },
     },
   ]);
 
+  // Use aggregatePaginate for pagination
   const students = await Student.aggregatePaginate(studentsAggregate, options);
+
   if (!students) {
     return res
       .status(500)
