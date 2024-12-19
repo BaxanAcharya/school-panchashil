@@ -22,7 +22,7 @@ const getString = (data) => {
   let rows = "";
   data.forEach((item, index) => {
     rows +=
-      "<tr>\n" +
+      "<tr style='font-weight:bold;'>\n" +
       "<td>" +
       (index + 1) +
       "</td>\n<td>" +
@@ -823,7 +823,7 @@ const bulkPrintBill = handleAsync(async (req, res) => {
           }
           ${
             isBill.isPaid
-              ? `<p style="text-align: center; margin-top:-25px">
+              ? `<p style="text-align: center; margin-top:-25px; font-weight: bold">
             Bill Number:
             <span style="font-weight: bold">#${isBill.billNo}</span>
           </p>`
@@ -832,27 +832,27 @@ const bulkPrintBill = handleAsync(async (req, res) => {
           <div class="student-info" style="margin-top:-20px !important">
             <div>
               <p>
-                <strong>Student Name:</strong> ${isBill.student.id.fullName}
-              </p>
+                <strong>Student Name: ${isBill.student.id.fullName}
+            </strong> </p>
               <p>
-                <strong>Roll No:</strong> ${isBill.student.rollNo}
-              </p>
+                <strong>Roll No: ${isBill.student.rollNo}
+          </strong>    </p>
               <p>
-                <strong>Month:</strong> ${getNepaliMonthName(isBill.month)}
-              </p>
+                <strong>Month: ${getNepaliMonthName(isBill.month)}
+            </strong>  </p>
             </div>
             <div>
               <p>
-                <strong>Class:</strong> ${isBill.student.class.name} ${
+                <strong>Class: ${isBill.student.class.name} ${
                   isBill.student.class.section
                 }
-              </p>
+             </strong> </p>
               <p>
-                <strong>Date:</strong> ${convertToNepaliDate(isBill.date)}
-              </p>
+                <strong>Date:${convertToNepaliDate(isBill.date)}
+            </strong>   </p>
               <p>
-                <strong>Year:</strong> ${isBill.year}
-              </p>
+                <strong>Year:${isBill.year}
+            </strong>   </p>
             </div>
           </div>
           <table>
@@ -868,19 +868,19 @@ const bulkPrintBill = handleAsync(async (req, res) => {
           </table>
           <div style="display:flex;justify-content: flex-end;">
             <div class="total">
-              <p><strong>Total :</strong> Rs ${isBill.total}</p>
+              <p><strong>Total : Rs ${isBill.total} </strong></p>
             </div>
             ${
               isBill.discount && isBill.isPaid
                 ? `<div class="total" style="margin-left:20px">
-                  <p><strong>Discount :</strong> Rs ${isBill.discount}</p>
+                  <p><strong>Discount : Rs ${isBill.discount} </strong></p>
                 </div>`
                 : ""
             }
             ${
               isBill.isPaid
                 ? `<div class="total" style="margin-left:20px">
-                  <p><strong>Paid :</strong> Rs ${isBill.paidAmount}</p>
+                  <p><strong>Paid : Rs ${isBill.paidAmount}</strong></p>
                 </div>`
                 : ""
             }
@@ -889,10 +889,10 @@ const bulkPrintBill = handleAsync(async (req, res) => {
             !isBill.isPaid
               ? `<div>
                 <p>
-                  <strong>Total Amount in words:</strong> ${numberToWords(
+                  <strong>Total Amount in words: ${numberToWords(
                     isBill.total
                   )} Only
-                </p>
+               </strong> </p>
               </div>`
               : ""
           }
@@ -900,16 +900,16 @@ const bulkPrintBill = handleAsync(async (req, res) => {
             isBill.isPaid
               ? `<div>
                 <p>
-                  <strong>Total Paid Amount in words:</strong> ${numberToWords(
+                  <strong>Total Paid Amount in words:${numberToWords(
                     isBill.paidAmount
                   )} Only
-                </p>  
+              </strong></p>  
               </div>`
               : ""
           }
           <div class="footer">
-            <p>Note: Monthly fee should be paid within ten days from the starting of every month.</p>
-            <p>For any queries, please contact the school office Number. (9855041017)</p>
+            <p style='font-weight:bold;'>Note: Monthly fee should be paid within ten days from the starting of every month.</p>
+            <p style='font-weight:bold;'>For any queries, please contact the school office Number. (9855041017)</p>
           </div>
         </div>
       `;
@@ -1136,7 +1136,7 @@ const printBill = handleAsync(async (req, res) => {
         }
         ${
           isBill.isPaid
-            ? `<p style="text-align: center; margin-top:-25px">
+            ? `<p style="text-align: center; margin-top:-25px; font-weight: bold">
           Bill Number:
           <span style="font-weight: bold"
             >#${isBill.billNo}</span
@@ -1147,24 +1147,27 @@ const printBill = handleAsync(async (req, res) => {
 
         <div class="student-info" style="margin-top:-20px !important">
           <div>
-            <p><strong>Student Name:</strong> ${
+            <p><strong>Student Name: ${
               isBill.student.id?.fullName
                 ? isBill.student.id?.fullName
                 : "Student"
-            }</p>
-            <p><strong>Roll No:</strong>${isBill.student.rollNo}</p>
-            <p><strong>Month:</strong> ${getNepaliMonthName(isBill.month)}</p>
+            } </strong></p>
+            <p><strong>Roll No:${isBill.student.rollNo}</strong></p>
+            <p><strong>Month: ${getNepaliMonthName(isBill.month)}</strong></p>
           </div>
           <div>
             <p>
-              <strong>Class:</strong> ${isBill.student.class.name} ${
+              <strong>Class: ${isBill.student.class.name} ${
                 isBill.student.class.section
               }
+              </strong>
             </p>
             <p>
-             <strong> Date:</strong> ${convertToNepaliDate(isBill.date)}
+             <strong> Date: ${convertToNepaliDate(isBill.date)}
+             </strong>
             </p>
-            <p><strong>Year:</strong> ${isBill.year}</p>
+            <p><strong>Year: ${isBill.year}
+            </strong></p>
           </div>
         </div>
         <table>
@@ -1182,13 +1185,13 @@ const printBill = handleAsync(async (req, res) => {
         </table>
      <div style="display:flex;justify-content: flex-end;"> 
         <div class="total">
-          <p><strong>Total :</strong> Rs ${isBill.total}</p>
+          <p><strong>Total : Rs ${isBill.total} </strong></p>
         </div>
 
         ${
           isBill.discount && isBill.isPaid
             ? `  <div class="total" style="margin-left:20px">
-        <p><strong>Discount :</strong> Rs ${isBill.discount}</p>
+        <p><strong>Discount : Rs ${isBill.discount}</strong></p>
       </div>`
             : ""
         }
@@ -1198,7 +1201,7 @@ const printBill = handleAsync(async (req, res) => {
       ${
         isBill.isPaid
           ? ` <div class="total" style="margin-left:20px">
-          <p><strong>Paid :</strong> Rs ${isBill.paidAmount}</p>
+          <p><strong>Paid : Rs ${isBill.paidAmount}</strong></p>
         </div>`
           : ``
       }
@@ -1207,11 +1210,9 @@ const printBill = handleAsync(async (req, res) => {
         !isBill.isPaid
           ? ` <div>
           <p>
-            <strong>Total Amount in words:</strong> ${numberToWords(
-              isBill.total
-            )}
+            <strong>Total Amount in words: ${numberToWords(isBill.total)}
             Only
-          </p>
+        </strong> </p>
         </div>`
           : ""
       }
@@ -1220,21 +1221,21 @@ const printBill = handleAsync(async (req, res) => {
           isBill.isPaid
             ? `<div>
           <p>
-            <strong>Total Paid Amount in words:</strong> ${numberToWords(
+            <strong>Total Paid Amount in words: ${numberToWords(
               isBill.paidAmount
             )}
             Only
-          </p>  
+         </strong> </p>  
         </div>`
             : ``
         }
            
         <div class="footer">
-          <p>
+          <p style='font-weight:bold;'>
             Note: Monthly fee should be paid within ten days from the starting of
             every month.
           </p>
-          <p>
+          <p style='font-weight:bold;'>
             For any queries, please contact the school office Number. (9855041017)
           </p>
         </div>
