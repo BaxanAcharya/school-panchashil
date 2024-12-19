@@ -1144,7 +1144,11 @@ const printBill = handleAsync(async (req, res) => {
 
         <div class="student-info" style="margin-top:-20px !important">
           <div>
-            <p><strong>Student Name:</strong> ${isBill.student.id.fullName}</p>
+            <p><strong>Student Name:</strong> ${
+              isBill.student.id?.fullName
+                ? isBill.student.id?.fullName
+                : "Student"
+            }</p>
             <p><strong>Roll No:</strong>${isBill.student.rollNo}</p>
             <p><strong>Month:</strong> ${getNepaliMonthName(isBill.month)}</p>
           </div>
