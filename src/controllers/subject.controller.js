@@ -5,6 +5,10 @@ import { GenericError } from "../utils/GenericError.js";
 import { GenericReponse } from "../utils/GenericResponse.js";
 import { handleAsync } from "../utils/handleAsync.js";
 import {
+  handlePaginationParams,
+  makePaginatedResponse,
+} from "../utils/HandlePagination.js";
+import {
   validateClassId,
   validateDisplayOrder,
   validateFullMarks,
@@ -76,44 +80,61 @@ const addSubject = handleAsync(async (req, res) => {
     .json(new GenericReponse(201, "Subject created successfully ", subject));
 });
 
-const getSubjects = handleAsync(async (_, res) => {
-  const subjects = await Subject.aggregate([
-    {
-      $lookup: {
-        from: "classes",
-        localField: "class",
-        foreignField: "_id",
-        as: "classValues",
-        pipeline: [
-          {
-            $project: {
-              createdAt: 0,
-              updatedAt: 0,
-              __v: 0,
-            },
-          },
-        ],
-      },
-    },
-    {
-      $addFields: {
-        classValues: {
-          $first: "$classValues",
+const getSubjects = handleAsync(async (req, res) => {
+  const { options, dir } = handlePaginationParams(req);
+  console.log(req.query);
+  const subjects = await Subject.aggregatePaginate(
+    Subject.aggregate([
+      {
+        $match: {
+          ...(req.query.name
+            ? { name: { $regex: req.query.name, $options: "i" } } // Case-insensitive search
+            : {}),
+          ...(req.query.class
+            ? { class: new mongoose.Types.ObjectId(req.query.class) }
+            : {}),
         },
       },
-    },
-    {
-      $project: {
-        __v: 0,
-        class: 0,
+      {
+        $lookup: {
+          from: "classes",
+          localField: "class",
+          foreignField: "_id",
+          as: "classValues",
+          pipeline: [
+            {
+              $project: {
+                createdAt: 0,
+                updatedAt: 0,
+                __v: 0,
+              },
+            },
+          ],
+        },
       },
-    },
-    {
-      $sort: {
-        displayOrder: 1,
+      {
+        $addFields: {
+          classValues: {
+            $first: "$classValues",
+          },
+        },
       },
-    },
-  ]);
+      {
+        $project: {
+          _id: 1,
+          name: 1,
+          displayOrder: 1,
+          classValues: 1, // Retain the classValues field
+        },
+      },
+      {
+        $sort: {
+          displayOrder: dir,
+        },
+      },
+    ]),
+    options
+  );
   if (!subjects) {
     return res
       .status(500)
@@ -121,7 +142,13 @@ const getSubjects = handleAsync(async (_, res) => {
   }
   return res
     .status(200)
-    .json(new GenericReponse(200, "Subjects fetched successfully", subjects));
+    .json(
+      new GenericReponse(
+        200,
+        "Subjects fetched successfully",
+        makePaginatedResponse(subjects, dir)
+      )
+    );
 });
 
 const getSubjectById = handleAsync(async (req, res) => {
@@ -176,66 +203,6 @@ const getSubjectById = handleAsync(async (req, res) => {
     .json(new GenericReponse(200, "Subject fetched successfully", subject[0]));
 });
 
-const getSubjectByClassId = handleAsync(async (req, res) => {
-  const { classId } = req.params;
-  if (!mongoose.isValidObjectId(classId)) {
-    return res
-      .status(400)
-      .json(new GenericError(400, "Class id is not valid."));
-  }
-
-  const subjects = await Subject.aggregate([
-    {
-      $match: {
-        class: new mongoose.Types.ObjectId(classId),
-      },
-    },
-    {
-      $lookup: {
-        from: "classes",
-        localField: "class",
-        foreignField: "_id",
-        as: "classValues",
-        pipeline: [
-          {
-            $project: {
-              createdAt: 0,
-              updatedAt: 0,
-              __v: 0,
-            },
-          },
-        ],
-      },
-    },
-    {
-      $addFields: {
-        classValues: {
-          $first: "$classValues",
-        },
-      },
-    },
-    {
-      $project: {
-        __v: 0,
-        class: 0,
-      },
-    },
-    {
-      $sort: {
-        displayOrder: 1,
-      },
-    },
-  ]);
-  if (!subjects) {
-    return res
-      .status(500)
-      .json(new GenericError(500, "Error while fetching subjects."));
-  }
-  return res
-    .status(200)
-    .json(new GenericReponse(200, "Subjects fetched successfully", subjects));
-});
-
 const updateSubjectById = handleAsync(async (req, res) => {
   const { id } = req.params;
   if (!mongoose.isValidObjectId(id)) {
@@ -286,7 +253,6 @@ const deleteSubjectById = handleAsync(async (req, res) => {
 export {
   addSubject,
   deleteSubjectById,
-  getSubjectByClassId,
   getSubjectById,
   getSubjects,
   updateSubjectById,
