@@ -16,11 +16,7 @@ const staffSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-    kidsFee: {
-      type: Number,
-      required: false,
-      default: 0,
-    },
+
     taxPercentage: {
       type: Number,
       required: false,
