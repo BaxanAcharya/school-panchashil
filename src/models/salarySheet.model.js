@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2";
 
 const salarySheetSchema = new mongoose.Schema(
   {
@@ -48,5 +49,7 @@ const salarySheetSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+
+salarySheetSchema.plugin(mongooseAggregatePaginate);
 
 export default mongoose.model("SalarySheet", salarySheetSchema);

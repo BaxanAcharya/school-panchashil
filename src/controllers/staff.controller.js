@@ -29,7 +29,12 @@ const addStaff = handleAsync(async (req, res) => {
 });
 
 const getStaffs = handleAsync(async (req, res) => {
-  const staffs = await Staff.find();
+  const { left } = req.query;
+  let filter = {};
+  if (left) {
+    filter = left === "true" ? { hasLeft: true } : { hasLeft: false };
+  }
+  const staffs = await Staff.find(filter);
   return res.status(200).json(new GenericReponse(200, "Staffs", staffs));
 });
 
