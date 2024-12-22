@@ -185,7 +185,6 @@ const addSalarySheetBulk = handleAsync(async (req, res) => {
   }
 
   const newSalarySheets = [];
-  console.log(staffs);
 
   items.forEach((item) => {
     const staff = staffs.find(
