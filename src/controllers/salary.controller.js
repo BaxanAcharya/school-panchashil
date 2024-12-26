@@ -85,16 +85,22 @@ const addSalarySheet = handleAsync(async (req, res) => {
   const salary = staff.salary;
   const oneDaySalary = salary / totalWorkingDays;
 
-  let absentDaySalary = 0;
+  let salaryCalculated = 0;
 
-  if (absentDays > 1) {
-    absentDaySalary = oneDaySalary * absentDays - 1;
+  switch (absentDays) {
+    case 0:
+      salaryCalculated = salary + oneDaySalary;
+      break;
+    case 1:
+      salaryCalculated = salary;
+      break;
+    default:
+      salaryCalculated = salary - oneDaySalary * absentDays;
+      break;
   }
-
-  const salaryOfPresentDays = salary - absentDaySalary;
-
-  const tax = (salary * staff.taxPercentage) / 100;
-  const receivedAmount = salaryOfPresentDays - tax - kidFee - oldDue - advance;
+  const salaryBeforeTax = salaryCalculated - kidFee + oldDue - advance;
+  const tax = (salaryBeforeTax * staff.taxPercentage) / 100;
+  const receivedAmount = salaryBeforeTax - tax;
 
   const newSalarySheet = await SalarySheet.create({
     staff: staffId,
@@ -185,7 +191,6 @@ const addSalarySheetBulk = handleAsync(async (req, res) => {
   }
 
   const newSalarySheets = [];
-  console.log(staffs);
 
   items.forEach((item) => {
     const staff = staffs.find(
@@ -198,18 +203,23 @@ const addSalarySheetBulk = handleAsync(async (req, res) => {
     const salary = staff.salary;
     const oneDaySalary = salary / item.totalWorkingDays;
 
-    let absentDaySalary = 0;
+    let salaryCalculated = 0;
 
-    if (item.absentDays > 1) {
-      absentDaySalary = oneDaySalary * item.absentDays - 1;
+    switch (item.absentDays) {
+      case 0:
+        salaryCalculated = salary + oneDaySalary;
+        break;
+      case 1:
+        salaryCalculated = salary;
+        break;
+      default:
+        salaryCalculated = salary - oneDaySalary * item.absentDays;
+        break;
     }
-
-    const salaryOfPresentDays = salary - absentDaySalary;
-
-    const tax = (salary * staff.taxPercentage) / 100;
-    const receivedAmount =
-      salaryOfPresentDays - tax - item.kidFee - item.oldDue - item.advance;
-
+    const salaryBeforeTax =
+      salaryCalculated - item.kidFee + item.oldDue - item.advance;
+    const tax = (salaryBeforeTax * staff.taxPercentage) / 100;
+    const receivedAmount = salaryBeforeTax - tax;
     newSalarySheets.push({
       staff: item.staffId,
       month: parseInt(month),
@@ -292,6 +302,7 @@ const getSalarySheets = handleAsync(async (req, res) => {
           oldDue: 1,
           absentDays: 1,
           receivedAmount: 1,
+          createdAt: 1,
         },
       },
       {
@@ -393,17 +404,23 @@ const updateSalarySheet = handleAsync(async (req, res) => {
   const salary = staff.salary;
   const oneDaySalary = salary / totalWorkingDays;
 
-  let absentDaySalary = 0;
+  let salaryCalculated = 0;
 
-  if (absentDays > 1) {
-    absentDaySalary = oneDaySalary * absentDays - 1;
+  switch (absentDays) {
+    case 0:
+      salaryCalculated = salary + oneDaySalary;
+      break;
+    case 1:
+      salaryCalculated = salary;
+      break;
+    default:
+      salaryCalculated = salary - oneDaySalary * absentDays;
+      break;
   }
 
-  const salaryOfPresentDays = salary - absentDaySalary;
-
-  const tax = (salary * staff.taxPercentage) / 100;
-  const receivedAmount = salaryOfPresentDays - tax - kidFee - oldDue - advance;
-
+  const salaryBeforeTax = salaryCalculated - kidFee + oldDue - advance;
+  const tax = (salaryBeforeTax * staff.taxPercentage) / 100;
+  const receivedAmount = salaryBeforeTax - tax;
   const updatedSalarySheet = await SalarySheet.findByIdAndUpdate(
     id,
     {
