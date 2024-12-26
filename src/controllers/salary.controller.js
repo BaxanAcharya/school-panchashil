@@ -95,7 +95,7 @@ const addSalarySheet = handleAsync(async (req, res) => {
       salaryCalculated = salary;
       break;
     default:
-      salaryCalculated = salary - oneDaySalary * absentDays;
+      salaryCalculated = salary + oneDaySalary - oneDaySalary * absentDays;
       break;
   }
   const salaryBeforeTax = salaryCalculated - kidFee + oldDue - advance;
@@ -213,7 +213,8 @@ const addSalarySheetBulk = handleAsync(async (req, res) => {
         salaryCalculated = salary;
         break;
       default:
-        salaryCalculated = salary - oneDaySalary * item.absentDays;
+        salaryCalculated =
+          salary + oneDaySalary - oneDaySalary * item.absentDays;
         break;
     }
     const salaryBeforeTax =
@@ -414,7 +415,7 @@ const updateSalarySheet = handleAsync(async (req, res) => {
       salaryCalculated = salary;
       break;
     default:
-      salaryCalculated = salary - oneDaySalary * absentDays;
+      salaryCalculated = salary + oneDaySalary - oneDaySalary * absentDays;
       break;
   }
 
