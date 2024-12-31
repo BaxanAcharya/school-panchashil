@@ -1,5 +1,6 @@
 import { v2 as cloudinary } from "cloudinary";
 import fs from "fs";
+import path from "path";
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
@@ -21,4 +22,23 @@ const uplaodOnBucket = async (filePath) => {
   }
 };
 
-export { uplaodOnBucket };
+const uplaodLogFileOnBucket = async () => {
+  try {
+    const logPath = path.join(path.resolve(), "access.log");
+    if (!fs.existsSync(logPath)) {
+      console.log("Access log not found");
+      return;
+    }
+
+    const customFileName = `access-log`;
+    const fileRepose = await bucket.uploader.upload(logPath, {
+      public_id: `logs/${customFileName}`, // Set the custom name
+      resource_type: "auto",
+    });
+    return fileRepose.secure_url;
+  } catch (error) {
+    return null;
+  }
+};
+
+export { uplaodLogFileOnBucket, uplaodOnBucket };
