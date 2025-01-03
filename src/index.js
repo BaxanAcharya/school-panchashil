@@ -10,17 +10,19 @@ env.config({
 
 connectDB()
   .then(() => {
-    setInterval(async () => {
-      const env = process.env.ENV;
-      if (!env) {
-        const res = await uplaodLogFileOnBucket();
-        if (res) {
-          console.log("Log file uploaded on bucket");
-        } else {
-          console.log("Log file not uploaded on bucket");
-        }
-      }
-    }, 5000);
+    const env = process.env.ENV;
+    if(!env){
+      setInterval(async () => {
+          const res = await uplaodLogFileOnBucket();
+          if (res) {
+            console.log("Log file uploaded on bucket");
+          } else {
+            console.log("Log file not uploaded on bucket");
+          }
+
+      }, 5000);
+    }
+    
     const PORT = process.env.PORT || 8000;
     app.listen(PORT, () => {
       console.log(`🚀 Server is now live !! 🎉`);
