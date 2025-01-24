@@ -98,9 +98,9 @@ const addSalarySheet = handleAsync(async (req, res) => {
       salaryCalculated = salary + oneDaySalary - oneDaySalary * absentDays;
       break;
   }
-  const salaryBeforeTax = salaryCalculated - kidFee + oldDue - advance;
-  const tax = (salaryBeforeTax * staff.taxPercentage) / 100;
-  const receivedAmount = salaryBeforeTax - tax;
+
+  const tax = (salaryCalculated * staff.taxPercentage) / 100;
+  const receivedAmount = salaryCalculated - tax - kidFee + oldDue - advance;
 
   const newSalarySheet = await SalarySheet.create({
     staff: staffId,
@@ -217,10 +217,10 @@ const addSalarySheetBulk = handleAsync(async (req, res) => {
           salary + oneDaySalary - oneDaySalary * item.absentDays;
         break;
     }
-    const salaryBeforeTax =
-      salaryCalculated - item.kidFee + item.oldDue - item.advance;
-    const tax = (salaryBeforeTax * staff.taxPercentage) / 100;
-    const receivedAmount = salaryBeforeTax - tax;
+
+    const tax = (salaryCalculated * staff.taxPercentage) / 100;
+    const receivedAmount =
+      salaryCalculated - tax - item.kidFee + item.oldDue - item.advance;
     newSalarySheets.push({
       staff: item.staffId,
       month: parseInt(month),
@@ -418,10 +418,8 @@ const updateSalarySheet = handleAsync(async (req, res) => {
       salaryCalculated = salary + oneDaySalary - oneDaySalary * absentDays;
       break;
   }
-
-  const salaryBeforeTax = salaryCalculated - kidFee + oldDue - advance;
-  const tax = (salaryBeforeTax * staff.taxPercentage) / 100;
-  const receivedAmount = salaryBeforeTax - tax;
+  const tax = (salaryCalculated * staff.taxPercentage) / 100;
+  const receivedAmount = salaryCalculated - tax - kidFee + oldDue - advance;
   const updatedSalarySheet = await SalarySheet.findByIdAndUpdate(
     id,
     {
