@@ -582,11 +582,23 @@ const getBills = handleAsync(async (req, res) => {
             },
           },
         },
+
+        unpaidAmountSum: {
+          $sum: {
+            $cond: {
+              if: { $eq: ["$isPaid", true] },
+              then: "$dueAfterPayment",
+              else: 0,
+            },
+          },
+        },
       },
     },
   ];
 
   const [totals] = await Bill.aggregate(totalSumsPipeline);
+
+  console.log(totals);
 
   const paginatedResult = await Bill.aggregatePaginate(
     Bill.aggregate(billAggregate),
@@ -606,7 +618,7 @@ const getBills = handleAsync(async (req, res) => {
         totalSum: totals?.totalSum || 0,
         paidAmountSum: totals?.paidAmountSum || 0,
         discountSum: totals?.discountSum || 0,
-        totalUnpaid: totals?.notPaidSum || 0,
+        totalUnpaid: (totals?.notPaidSum || 0) + (totals?.unpaidAmountSum || 0),
       },
     })
   );
