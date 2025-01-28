@@ -173,6 +173,12 @@ const billSchema = new mongoose.Schema(
       required: false,
       default: 0,
     },
+
+    dueAfterPayment: {
+      type: Number,
+      required: false,
+      default: 0,
+    },
   },
   { timestamps: true }
 );

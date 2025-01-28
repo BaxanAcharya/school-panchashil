@@ -4,6 +4,7 @@ import {
   addBulkBill,
   bulkPrintBill,
   deleteBill,
+  fixBill,
   getBill,
   getBillOfClassYearMonth,
   getBills,
@@ -33,5 +34,7 @@ router.route("/:id").put(verifyJWT, updateBill);
 router.route("/:id/print").post(verifyJWT, printBill);
 router.route("/:year/:month/bulk/print").post(verifyJWT, bulkPrintBill);
 router.route("/:year/:month/bulk/student").get(verifyJWT, getBillsOfStudentIn);
+
+router.route("/fix/all").put(fixBill);
 
 export default router;

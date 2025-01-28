@@ -504,6 +504,7 @@ const getBills = handleAsync(async (req, res) => {
         stationaryFee: 1,
         deposit: 1,
         transportation: 1,
+        dueAfterPayment: 1,
         evaluation: 1,
         extra: 1,
         due: 1,
@@ -560,6 +561,27 @@ const getBills = handleAsync(async (req, res) => {
             ],
           },
         },
+        notPaidSum: {
+          $sum: {
+            $cond: {
+              if: { $eq: ["$isPaid", false] },
+              then: {
+                $add: [
+                  "$admissionFee.amount",
+                  "$serviceFee.amount",
+                  "$schoolFee.amount",
+                  "$stationaryFee.amount",
+                  "$deposit.amount",
+                  "$transportation.amount",
+                  "$evaluation.amount",
+                  "$extra.amount",
+                  "$diary.amount",
+                ],
+              },
+              else: 0,
+            },
+          },
+        },
       },
     },
   ];
@@ -584,8 +606,7 @@ const getBills = handleAsync(async (req, res) => {
         totalSum: totals?.totalSum || 0,
         paidAmountSum: totals?.paidAmountSum || 0,
         discountSum: totals?.discountSum || 0,
-        totalUnpaid:
-          totals?.totalSum - (totals?.paidAmountSum + totals?.discountSum) || 0,
+        totalUnpaid: totals?.notPaidSum || 0,
       },
     })
   );
@@ -1437,6 +1458,23 @@ const payBill = handleAsync(async (req, res) => {
   isBill.paidAmount = paidAmount;
   isBill.url = null;
 
+  const totalForMonth =
+    isBill.admissionFee.amount +
+    isBill.serviceFee.amount +
+    isBill.schoolFee.amount +
+    isBill.stationaryFee.amount +
+    isBill.deposit.amount +
+    isBill.transportation.amount +
+    isBill.evaluation.amount +
+    isBill.extra.amount +
+    isBill.diary.amount;
+
+  if (totalForMonth - (paidAmount + discount) <= 0) {
+    isBill.dueAfterPayment = 0;
+  } else {
+    isBill.dueAfterPayment = totalForMonth - (paidAmount + discount);
+  }
+
   await isBill.save();
 
   return res
@@ -1700,11 +1738,57 @@ const addBulkBill = handleAsync(async (req, res) => {
   }
 });
 
+const fixBill = handleAsync(async (req, res) => {
+  const bills = await Bill.find();
+  const fixedBills = [];
+  bills.forEach((bill) => {
+    if (!bill.isPaid) {
+      bill.dueAfterPayment = 0;
+      fixedBills.push(bill);
+    } else {
+      const totalForMonth =
+        bill.admissionFee.amount +
+        bill.serviceFee.amount +
+        bill.schoolFee.amount +
+        bill.stationaryFee.amount +
+        bill.deposit.amount +
+        bill.transportation.amount +
+        bill.evaluation.amount +
+        bill.extra.amount +
+        bill.diary.amount;
+
+      if (totalForMonth - (bill.paidAmount + bill.discount) <= 0) {
+        bill.dueAfterPayment = 0;
+        fixedBills.push(bill);
+      } else {
+        bill.dueAfterPayment =
+          totalForMonth - (bill.paidAmount + bill.discount);
+        fixedBills.push(bill);
+      }
+    }
+  });
+
+  await Promise.all(
+    fixedBills.map(async (bill) => {
+      return await Bill.findByIdAndUpdate(bill._id, bill, {
+        new: true, // Return the updated document
+        upsert: true, // Create a new document if not found
+        runValidators: true, // Run validators during update
+      });
+    })
+  );
+
+  return res
+    .status(200)
+    .json(new GenericReponse(200, "Bills Fixed Successfully", fixedBills));
+});
+
 export {
   addBill,
   addBulkBill,
   bulkPrintBill,
   deleteBill,
+  fixBill,
   getBill,
   getBillOfClassYearMonth,
   getBills,
