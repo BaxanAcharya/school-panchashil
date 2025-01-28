@@ -534,9 +534,32 @@ const getBills = handleAsync(async (req, res) => {
     {
       $group: {
         _id: null,
-        totalSum: { $sum: "$total" },
+        admissionFeeSum: { $sum: "$admissionFee.amount" },
+        serviceFeeSum: { $sum: "$serviceFee.amount" },
+        schoolFeeSum: { $sum: "$schoolFee.amount" },
+        stationaryFeeSum: { $sum: "$stationaryFee.amount" },
+        depositSum: { $sum: "$deposit.amount" },
+        transportationSum: { $sum: "$transportation.amount" },
+        evaluationSum: { $sum: "$evaluation.amount" },
+        extraSum: { $sum: "$extra.amount" },
+        diarySum: { $sum: "$diary.amount" },
         paidAmountSum: { $sum: "$paidAmount" },
         discountSum: { $sum: "$discount" },
+        totalSum: {
+          $sum: {
+            $add: [
+              "$admissionFee.amount",
+              "$serviceFee.amount",
+              "$schoolFee.amount",
+              "$stationaryFee.amount",
+              "$deposit.amount",
+              "$transportation.amount",
+              "$evaluation.amount",
+              "$extra.amount",
+              "$diary.amount",
+            ],
+          },
+        },
       },
     },
   ];
