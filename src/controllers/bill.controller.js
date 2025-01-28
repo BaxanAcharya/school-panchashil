@@ -598,8 +598,6 @@ const getBills = handleAsync(async (req, res) => {
 
   const [totals] = await Bill.aggregate(totalSumsPipeline);
 
-  console.log(totals);
-
   const paginatedResult = await Bill.aggregatePaginate(
     Bill.aggregate(billAggregate),
     options
