@@ -577,8 +577,6 @@ const getBills = handleAsync(async (req, res) => {
       .json(new GenericError(500, "Error while fetching bills"));
   }
 
-  console.log(totals);
-
   return res.status(200).json(
     new GenericReponse(200, "Bills Fetched Successfully", {
       ...makePaginatedResponse(paginatedResult, dir),
