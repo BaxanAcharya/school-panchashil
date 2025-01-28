@@ -430,7 +430,7 @@ const addBill = handleAsync(async (req, res) => {
 
 const getBills = handleAsync(async (req, res) => {
   const { options, dir } = handlePaginationParams(req);
-  const billAggregate = Bill.aggregate([
+  const billAggregate = [
     {
       $match: {
         ...(req.query.isPaid !== undefined
@@ -527,25 +527,45 @@ const getBills = handleAsync(async (req, res) => {
         billNo: dir,
       },
     },
-  ]);
+  ];
 
-  const bills = await Bill.aggregatePaginate(billAggregate, options);
+  const totalSumsPipeline = [
+    ...billAggregate,
+    {
+      $group: {
+        _id: null,
+        totalSum: { $sum: "$total" },
+        paidAmountSum: { $sum: "$paidAmount" },
+        discountSum: { $sum: "$discount" },
+      },
+    },
+  ];
 
-  if (!bills) {
+  const [totals] = await Bill.aggregate(totalSumsPipeline);
+
+  console.log(totals);
+
+  const paginatedResult = await Bill.aggregatePaginate(
+    Bill.aggregate(billAggregate),
+    options
+  );
+
+  if (!paginatedResult) {
     return res
       .status(500)
       .json(new GenericError(500, "Error while fetching bills"));
   }
 
-  return res
-    .status(200)
-    .json(
-      new GenericReponse(
-        200,
-        "Bills Fetched Successfully",
-        makePaginatedResponse(bills, dir)
-      )
-    );
+  return res.status(200).json(
+    new GenericReponse(200, "Bills Fetched Successfully", {
+      ...makePaginatedResponse(paginatedResult, dir),
+      totals: {
+        totalSum: totals?.totalSum || 0,
+        paidAmountSum: totals?.paidAmountSum || 0,
+        discountSum: totals?.discountSum || 0,
+      },
+    })
+  );
 });
 
 const getBillOfClassYearMonth = handleAsync(async (req, res) => {
