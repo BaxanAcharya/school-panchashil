@@ -6,6 +6,7 @@ import { GenericError } from "../utils/GenericError.js";
 import { GenericReponse } from "../utils/GenericResponse.js";
 import { handleAsync } from "../utils/handleAsync.js";
 
+import { uplaodOnBucket } from "../utils/bucket.js";
 import {
   handlePaginationParams,
   makePaginatedResponse,
@@ -130,6 +131,18 @@ const addStudent = handleAsync(async (req, res) => {
   if (!isClass) {
     return res.status(400).json(new GenericError(400, "Class not found"));
   }
+
+  const fileLocalPath = req.file ? req.file.path : null;
+  let image;
+  if (fileLocalPath) {
+    image = await uplaodOnBucket(fileLocalPath);
+    if (!image) {
+      return res
+        .status(500)
+        .json(new GenericError(500, "Error while uploading thumbnail."));
+    }
+  }
+
   const student = await Student.create({
     fullName,
     fatherName,
@@ -152,6 +165,7 @@ const addStudent = handleAsync(async (req, res) => {
     admissionDiscount: !isNewStudent ? 0 : admissionDiscount || 0,
     stationaryFeeDiscount: stationaryFeeDiscount || 0,
     serviceFeeDiscount: serviceFeeDiscount || 0,
+    image,
   });
   if (!student) {
     return res
@@ -286,6 +300,18 @@ const updateStudentById = handleAsync(async (req, res) => {
 
   const { id } = req.params;
 
+  const fileLocalPath = req.file ? req.file.path : null;
+  let imageUrl;
+  if (fileLocalPath) {
+    imageUrl = await uplaodOnBucket(fileLocalPath);
+    console.log(imageUrl);
+    if (!imageUrl) {
+      return res
+        .status(500)
+        .json(new GenericError(500, "Error while uploading thumbnail."));
+    }
+  }
+
   const updateData = {
     fullName,
     fatherName,
@@ -308,6 +334,7 @@ const updateStudentById = handleAsync(async (req, res) => {
     admissionDiscount: !isNewStudent ? 0 : admissionDiscount || 0,
     stationaryFeeDiscount: stationaryFeeDiscount || 0,
     serviceFeeDiscount: serviceFeeDiscount || 0,
+    image: imageUrl || undefined,
   };
 
   if (destination !== undefined) {

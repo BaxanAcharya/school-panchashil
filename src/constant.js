@@ -1,5 +1,5 @@
 export const DB_NAME = "school";
-export const PARSER_LIMIT = "25kb";
+export const PARSER_LIMIT = "5mb";
 export const API_PREFIX = "/api/v1";
 export const COOKIE_OPTIONS = {
   httpOnly: true,
