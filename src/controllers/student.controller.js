@@ -304,7 +304,6 @@ const updateStudentById = handleAsync(async (req, res) => {
   let imageUrl;
   if (fileLocalPath) {
     imageUrl = await uplaodOnBucket(fileLocalPath);
-    console.log(imageUrl);
     if (!imageUrl) {
       return res
         .status(500)
