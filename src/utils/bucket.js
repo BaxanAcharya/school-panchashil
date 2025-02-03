@@ -12,18 +12,22 @@ const bucket = cloudinary;
 // Use memory storage instead of disk storage
 const storage = multer.memoryStorage();
 export const upload = multer({ storage });
-const uplaodOnBucket = async (fileBuffer) => {
-  console.log(fileBuffer);
-  try {
-    if (!fileBuffer) return null;
-    const fileRepose = await bucket.uploader.upload_stream(fileBuffer, {
-      resource_type: "auto",
-    });
-    return fileRepose.secure_url;
-  } catch (error) {
-    console.log(error);
-    return null;
-  }
+
+const uplaodOnBucket = (fileBuffer) => {
+  return new Promise((resolve, reject) => {
+    const uploadStream = bucket.uploader.upload_stream(
+      { resource_type: "auto" },
+      (error, result) => {
+        if (error) {
+          console.error("Cloudinary upload error:", error);
+          reject(error);
+        } else {
+          resolve(result.secure_url);
+        }
+      }
+    );
+    uploadStream.end(fileBuffer);
+  });
 };
 
 const uplaodLogFileOnBucket = async () => {
