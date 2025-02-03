@@ -16,12 +16,7 @@ import subjectRouter from "./routes/subject.route.js";
 import transportationAreaRouter from "./routes/transportationArea.route.js";
 
 const app = express();
-// // Create a writable stream (in append mode)
-// const logStream = fs.createWriteStream(
-//   path.join(path.resolve(), "access.log"),
-//   { flags: "a" }
-// );
-// app.use(morgan("combined", { stream: logStream }));
+
 app.use(
   express.json({
     limit: PARSER_LIMIT,
