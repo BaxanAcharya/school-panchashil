@@ -1,8 +1,8 @@
 import env from "dotenv";
 import events from "events";
-import { app } from "./app.js";
-import connectDB from "./db/index.js";
-import { uplaodLogFileOnBucket } from "./utils/bucket.js";
+import { app } from "../src/app.js";
+import connectDB from "../src/db/index.js";
+import { uplaodLogFileOnBucket } from "../src/utils/bucket.js";
 events.EventEmitter.defaultMaxListeners = 15;
 env.config({
   path: "./env",
@@ -11,18 +11,17 @@ env.config({
 connectDB()
   .then(() => {
     const env = process.env.ENV;
-    if(!env){
+    if (!env) {
       setInterval(async () => {
-          const res = await uplaodLogFileOnBucket();
-          if (res) {
-            console.log("Log file uploaded on bucket");
-          } else {
-            console.log("Log file not uploaded on bucket");
-          }
-
+        const res = await uplaodLogFileOnBucket();
+        if (res) {
+          console.log("Log file uploaded on bucket");
+        } else {
+          console.log("Log file not uploaded on bucket");
+        }
       }, 5000);
     }
-    
+
     const PORT = process.env.PORT || 8000;
     app.listen(PORT, () => {
       console.log(`🚀 Server is now live !! 🎉`);
