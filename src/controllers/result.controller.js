@@ -1,6 +1,4 @@
 import mongoose from "mongoose";
-import path from "path";
-import { fileURLToPath } from "url";
 import XLSX from "xlsx";
 import { Class } from "../models/class.model.js";
 import { Exam } from "../models/exam.model.js";
@@ -1053,11 +1051,12 @@ const generateLedger = handleAsync(async (req, res) => {
     const workSheet = XLSX.utils.json_to_sheet(cleanData);
     const workBook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workBook, workSheet, "Ledger");
-    const __dirname = fileURLToPath(import.meta.url);
-    const fileName = `${exam.name}-${exam.year}-${_class.name}.xlsx`;
-    const filePath = path.join(__dirname, `../../../public/temp/${fileName}`);
-    XLSX.writeFile(workBook, filePath);
-    const pathUrl = await uplaodOnBucket(filePath);
+    // Generate the Excel file as a buffer
+    const fileBuffer = XLSX.write(workBook, {
+      bookType: "xlsx",
+      type: "buffer",
+    });
+    const pathUrl = await uplaodOnBucket(fileBuffer);
     res.status(200).json(new GenericReponse(200, "Ledger", pathUrl));
   } catch (error) {
     res
@@ -1134,10 +1133,10 @@ export {
   addResultBulk,
   deleteResult,
   generateLedger,
-  printBulkMarkSheet,
   getResultById,
   getResults,
   getResultsOfStudentIn,
+  printBulkMarkSheet,
   printMarkSheet,
   updateResult,
 };
