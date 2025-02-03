@@ -8,7 +8,7 @@ import {
 import { Admin } from "../models/admin.model.js";
 import { GenericError } from "../utils/GenericError.js";
 import { GenericReponse } from "../utils/GenericResponse.js";
-import { uplaodOnBucket } from "../utils/bucket.js";
+// import { uplaodOnBucket } from "../utils/bucket.js";
 import { handleAsync } from "../utils/handleAsync.js";
 import {
   validateEmail,
@@ -69,25 +69,25 @@ const addAdmin = handleAsync(async (req, res) => {
       );
   }
 
-  const fileLocalPath = req?.file?.path;
-  if (!fileLocalPath) {
-    return res
-      .status(400)
-      .json(new GenericError(400, "Please provide thumbnail."));
-  }
+  // const fileLocalPath = req?.file?.path;
+  // if (!fileLocalPath) {
+  //   return res
+  //     .status(400)
+  //     .json(new GenericError(400, "Please provide thumbnail."));
+  // }
 
-  const fileResponse = await uplaodOnBucket(fileLocalPath);
-  if (!fileResponse) {
-    return res
-      .status(500)
-      .json(new GenericError(500, "Error while uploading thumbnail."));
-  }
+  // const fileResponse = await uplaodOnBucket(fileLocalPath);
+  // if (!fileResponse) {
+  //   return res
+  //     .status(500)
+  //     .json(new GenericError(500, "Error while uploading thumbnail."));
+  // }
 
   const savedAdmin = await Admin.create({
     fullName,
     email,
     password,
-    thumbnail: fileResponse || "",
+    thumbnail: undefined,
   });
 
   savedAdmin.password = undefined;

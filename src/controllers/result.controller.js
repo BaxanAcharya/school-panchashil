@@ -1,7 +1,4 @@
 import mongoose from "mongoose";
-import path from "path";
-import { fileURLToPath } from "url";
-import XLSX from "xlsx";
 import { Class } from "../models/class.model.js";
 import { Exam } from "../models/exam.model.js";
 import Result from "../models/result.model.js";
@@ -10,7 +7,6 @@ import { Subject } from "../models/subject.model.js";
 import { GenericError } from "../utils/GenericError.js";
 import { GenericReponse } from "../utils/GenericResponse.js";
 import { getGpa, getGrade, getRemarks } from "../utils/Grading.js";
-import { uplaodOnBucket } from "../utils/bucket.js";
 import { handleAsync } from "../utils/handleAsync.js";
 import {
   validAttendence,
@@ -1050,15 +1046,15 @@ const generateLedger = handleAsync(async (req, res) => {
   });
 
   try {
-    const workSheet = XLSX.utils.json_to_sheet(cleanData);
-    const workBook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workBook, workSheet, "Ledger");
-    const __dirname = fileURLToPath(import.meta.url);
-    const fileName = `${exam.name}-${exam.year}-${_class.name}.xlsx`;
-    const filePath = path.join(__dirname, `../../../public/temp/${fileName}`);
-    XLSX.writeFile(workBook, filePath);
-    const pathUrl = await uplaodOnBucket(filePath);
-    res.status(200).json(new GenericReponse(200, "Ledger", pathUrl));
+    // const workSheet = XLSX.utils.json_to_sheet(cleanData);
+    // const workBook = XLSX.utils.book_new();
+    // XLSX.utils.book_append_sheet(workBook, workSheet, "Ledger");
+    // const __dirname = fileURLToPath(import.meta.url);
+    // const fileName = `${exam.name}-${exam.year}-${_class.name}.xlsx`;
+    // const filePath = path.join(__dirname, `../../../public/temp/${fileName}`);
+    // XLSX.writeFile(workBook, filePath);
+    // const pathUrl = await uplaodOnBucket(filePath);
+    res.status(200).json(new GenericReponse(200, "Ledger", "pathUrl"));
   } catch (error) {
     res
       .status(500)
@@ -1134,10 +1130,10 @@ export {
   addResultBulk,
   deleteResult,
   generateLedger,
-  printBulkMarkSheet,
   getResultById,
   getResults,
   getResultsOfStudentIn,
+  printBulkMarkSheet,
   printMarkSheet,
   updateResult,
 };
