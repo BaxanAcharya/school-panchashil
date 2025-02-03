@@ -8,6 +8,8 @@ env.config({
   path: "./env",
 });
 
+//deploy
+
 connectDB()
   .then(() => {
     const env = process.env.ENV;
