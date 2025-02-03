@@ -13,6 +13,7 @@ const bucket = cloudinary;
 const storage = multer.memoryStorage();
 export const upload = multer({ storage });
 const uplaodOnBucket = async (fileBuffer) => {
+  console.log(fileBuffer);
   try {
     if (!fileBuffer) return null;
     const fileRepose = await bucket.uploader.upload_stream(fileBuffer, {
