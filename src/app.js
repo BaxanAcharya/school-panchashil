@@ -1,7 +1,6 @@
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import express from "express";
-import morgan from "morgan";
 import { API_PREFIX, PARSER_LIMIT } from "./constant.js";
 import adminRouter from "./routes/admin.route.js";
 import billRouter from "./routes/bill.route.js";
@@ -22,7 +21,7 @@ const app = express();
 //   path.join(path.resolve(), "access.log"),
 //   { flags: "a" }
 // );
-app.use(morgan("combined", { stream: logStream }));
+// app.use(morgan("combined", { stream: logStream }));
 app.use(
   express.json({
     limit: PARSER_LIMIT,
