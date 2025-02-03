@@ -69,14 +69,14 @@ const addAdmin = handleAsync(async (req, res) => {
       );
   }
 
-  const fileLocalPath = req?.file?.path;
-  if (!fileLocalPath) {
+  const fileBuffer = req?.file?.buffer;
+  if (!fileBuffer) {
     return res
       .status(400)
       .json(new GenericError(400, "Please provide thumbnail."));
   }
 
-  const fileResponse = await uplaodOnBucket(fileLocalPath);
+  const fileResponse = await uplaodOnBucket(fileBuffer);
   if (!fileResponse) {
     return res
       .status(500)
@@ -226,14 +226,14 @@ const updateAdmin = handleAsync(async (req, res) => {
 });
 
 const updateThumbNail = handleAsync(async (req, res) => {
-  const localPath = req.file?.path;
-  if (!localPath) {
+  const fileBuffer = req.file?.buffer;
+  if (!fileBuffer) {
     return res
       .status(400)
       .json(new GenericError(400, "Please provide thumbnail."));
   }
 
-  const path = await uplaodOnBucket(localPath);
+  const path = await uplaodOnBucket(fileBuffer);
   if (!path) {
     return res
       .status(500)

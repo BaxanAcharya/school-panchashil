@@ -10,7 +10,7 @@ import {
   updateStudentById,
 } from "../controllers/student.controller.js";
 import { verifyJWT } from "../middleware/auth.middleware.js";
-import { upload } from "../middleware/multer.middleware.js";
+import { upload } from "../utils/bucket.js";
 
 const router = Router();
 router.route("/").post(verifyJWT, upload.single("image"), addStudent);

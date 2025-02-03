@@ -132,10 +132,10 @@ const addStudent = handleAsync(async (req, res) => {
     return res.status(400).json(new GenericError(400, "Class not found"));
   }
 
-  const fileLocalPath = req.file ? req.file.path : null;
+  const fileBuffer = req.file ? req.file.buffer : null;
   let image;
-  if (fileLocalPath) {
-    image = await uplaodOnBucket(fileLocalPath);
+  if (fileBuffer) {
+    image = await uplaodOnBucket(fileBuffer);
     if (!image) {
       return res
         .status(500)
@@ -300,10 +300,10 @@ const updateStudentById = handleAsync(async (req, res) => {
 
   const { id } = req.params;
 
-  const fileLocalPath = req.file ? req.file.path : null;
+  const fileBuffer = req.file ? req.file.buffer : null;
   let imageUrl;
-  if (fileLocalPath) {
-    imageUrl = await uplaodOnBucket(fileLocalPath);
+  if (fileBuffer) {
+    imageUrl = await uplaodOnBucket(fileBuffer);
     if (!imageUrl) {
       return res
         .status(500)

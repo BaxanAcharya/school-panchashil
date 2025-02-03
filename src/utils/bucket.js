@@ -8,16 +8,17 @@ cloudinary.config({
 });
 
 const bucket = cloudinary;
-const uplaodOnBucket = async (filePath) => {
+// Use memory storage instead of disk storage
+const storage = multer.memoryStorage();
+export const upload = multer({ storage });
+const uplaodOnBucket = async (fileBuffer) => {
   try {
-    if (!filePath) return null;
-    const fileRepose = await bucket.uploader.upload(filePath, {
+    if (!fileBuffer) return null;
+    const fileRepose = await bucket.uploader.upload_stream(fileBuffer, {
       resource_type: "auto",
     });
-    fs.unlinkSync(filePath);
     return fileRepose.secure_url;
   } catch (error) {
-    fs.unlinkSync(filePath);
     return null;
   }
 };

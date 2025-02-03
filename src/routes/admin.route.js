@@ -10,7 +10,8 @@ import {
   updateThumbNail,
 } from "../controllers/admin.controller.js";
 import { verifyJWT } from "../middleware/auth.middleware.js";
-import { upload } from "../middleware/multer.middleware.js";
+import { upload } from "../utils/bucket.js";
+// import { upload } from "../middleware/multer.middleware.js";
 const router = Router();
 router.route("/register").post(upload.single("thumbnail"), addAdmin);
 router.route("/login").post(loginAdmin);
