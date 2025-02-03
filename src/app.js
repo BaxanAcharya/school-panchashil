@@ -1,9 +1,7 @@
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import express from "express";
-import fs from "fs";
 import morgan from "morgan";
-import path from "path";
 import { API_PREFIX, PARSER_LIMIT } from "./constant.js";
 import adminRouter from "./routes/admin.route.js";
 import billRouter from "./routes/bill.route.js";
@@ -19,11 +17,11 @@ import subjectRouter from "./routes/subject.route.js";
 import transportationAreaRouter from "./routes/transportationArea.route.js";
 
 const app = express();
-// Create a writable stream (in append mode)
-const logStream = fs.createWriteStream(
-  path.join(path.resolve(), "access.log"),
-  { flags: "a" }
-);
+// // Create a writable stream (in append mode)
+// const logStream = fs.createWriteStream(
+//   path.join(path.resolve(), "access.log"),
+//   { flags: "a" }
+// );
 app.use(morgan("combined", { stream: logStream }));
 app.use(
   express.json({
