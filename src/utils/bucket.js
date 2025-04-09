@@ -13,10 +13,14 @@ const bucket = cloudinary;
 const storage = multer.memoryStorage();
 export const upload = multer({ storage });
 
-const uplaodOnBucket = (fileBuffer) => {
+const uplaodOnBucket = (fileBuffer, isExcel = false) => {
   return new Promise((resolve, reject) => {
+    let fileName = `file-${Date.now()}`;
+    if (isExcel) {
+      fileName = `file-${Date.now()}.xlsx`;
+    }
     const uploadStream = bucket.uploader.upload_stream(
-      { resource_type: "raw" },
+      { resource_type: "raw", public_id: fileName },
       (error, result) => {
         if (error) {
           console.error("Cloudinary upload error:", error);
