@@ -6,6 +6,8 @@ import { GenericError } from "../utils/GenericError.js";
 import { GenericReponse } from "../utils/GenericResponse.js";
 import { handleAsync } from "../utils/handleAsync.js";
 
+import { UPGRADE_CLASS } from "../constant.js";
+import { AdminControl } from "../models/admin-control.js";
 import { uplaodOnBucket } from "../utils/bucket.js";
 import {
   handlePaginationParams,
@@ -724,6 +726,59 @@ const getStudentByClass = handleAsync(async (req, res) => {
     .json(new GenericReponse(200, "Students fetched successfully", students));
 });
 
+const upgradeStudentClass = handleAsync(async (req, res) => {
+  const { fromClassId, toClassId } = req.params;
+  const isValidFromClassId = mongoose.isValidObjectId(fromClassId);
+  const isValidToClassId = mongoose.isValidObjectId(toClassId);
+  if (!isValidFromClassId || !isValidToClassId) {
+    return res.status(400).json(new GenericError(400, "Invalid Id"));
+  }
+
+  if (fromClassId === toClassId) {
+    return res
+      .status(400)
+      .json(new GenericError(400, "Cannot upgrade to same class"));
+  }
+
+  const isExist = await AdminControl.findOne({
+    func: UPGRADE_CLASS,
+  });
+
+  if (!isExist) {
+    return res
+      .status(400)
+      .json(
+        new GenericError(400, "Upgrade class locked, contact Biplab first")
+      );
+  } else if (!isExist.active) {
+    return res
+      .status(400)
+      .json(
+        new GenericError(400, "Upgrade class locked, contact Biplab first")
+      );
+  }
+
+  const fromClass = await Class.findById(fromClassId);
+  if (!fromClass) {
+    return res.status(404).json(new GenericError(404, "From class not found"));
+  }
+
+  const toClass = await Class.findById(toClassId);
+  if (!toClass) {
+    return res.status(404).json(new GenericError(404, "To class not found"));
+  }
+  const students = await Student.updateMany(
+    { class: fromClassId },
+    { class: toClassId }
+  );
+  if (!students) {
+    return res.status(404).json(new GenericError(404, "Students not found"));
+  }
+  return res
+    .status(200)
+    .json(new GenericReponse(200, "Students upgraded successfully", {}));
+});
+
 export {
   addStudent,
   deleteStudentById,
@@ -734,4 +789,5 @@ export {
   makeStudentLeave,
   makeStudentUnLeave,
   updateStudentById,
+  upgradeStudentClass,
 };
