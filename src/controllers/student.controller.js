@@ -457,6 +457,9 @@ const getLeftStudents = handleAsync(async (req, res) => {
     {
       $match: {
         hasLeft: true,
+        ...(req.query.fullName
+          ? { fullName: { $regex: req.query.fullName, $options: "i" } } // Case-insensitive search
+          : {}),
       },
     },
     {
@@ -613,6 +616,30 @@ const makeStudentLeave = handleAsync(async (req, res) => {
     .json(new GenericReponse(200, "Student made leave successfully", student));
 });
 
+const makeStudentUnLeave = handleAsync(async (req, res) => {
+  const { id } = req.params;
+
+  const isValidId = mongoose.isValidObjectId(id);
+  if (!isValidId) {
+    return res.status(400).json(new GenericError(400, "Invalid Id"));
+  }
+  const student = await Student.findByIdAndUpdate(
+    id,
+    {
+      hasLeft: false,
+    },
+    { new: true }
+  );
+  if (!student) {
+    return res.status(404).json(new GenericError(404, "Student not found"));
+  }
+  return res
+    .status(200)
+    .json(
+      new GenericReponse(200, "Student made unleave successfully", student)
+    );
+});
+
 const getStudentByClass = handleAsync(async (req, res) => {
   const { classId: id } = req.params;
   const isValidId = mongoose.isValidObjectId(id);
@@ -705,5 +732,6 @@ export {
   getStudentById,
   getStudents,
   makeStudentLeave,
+  makeStudentUnLeave,
   updateStudentById,
 };
