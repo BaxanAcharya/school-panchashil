@@ -82,20 +82,24 @@ const addSubject = handleAsync(async (req, res) => {
 
 const getSubjects = handleAsync(async (req, res) => {
   const { options, dir } = handlePaginationParams(req);
+  const matchQuery = {};
+
+  if (req.query.name) {
+    matchQuery.name = { $regex: req.query.name, $options: "i" }; // Case-insensitive search
+  }
+
+  if (req.query.class) {
+    matchQuery.class = new mongoose.Types.ObjectId(req.query.class);
+  }
+
+  if (req.query.disabled !== undefined) {
+    matchQuery.disabled = req.query.disabled === "true"; // or "false"
+  }
+
   const subjects = await Subject.aggregatePaginate(
     Subject.aggregate([
       {
-        $match: {
-          ...(req.query.name
-            ? { name: { $regex: req.query.name, $options: "i" } } // Case-insensitive search
-            : {}),
-          ...(req.query.disabled
-            ? { disabled: { $regex: req.query.disabled } }
-            : {}),
-          ...(req.query.class
-            ? { class: new mongoose.Types.ObjectId(req.query.class) }
-            : {}),
-        },
+        $match: matchQuery,
       },
       {
         $lookup: {
