@@ -89,6 +89,9 @@ const getSubjects = handleAsync(async (req, res) => {
           ...(req.query.name
             ? { name: { $regex: req.query.name, $options: "i" } } // Case-insensitive search
             : {}),
+          ...(req.query.disabled
+            ? { disabled: { $regex: req.query.disabled } }
+            : {}),
           ...(req.query.class
             ? { class: new mongoose.Types.ObjectId(req.query.class) }
             : {}),
@@ -125,11 +128,13 @@ const getSubjects = handleAsync(async (req, res) => {
           displayOrder: 1,
           fullMarks: 1,
           classValues: 1, // Retain the classValues field
+          disabled: 1,
         },
       },
       {
         $sort: {
           displayOrder: dir,
+          disabled: -1,
         },
       },
     ]),
@@ -258,11 +263,17 @@ const getSubjectByClassId = handleAsync(async (req, res) => {
       .json(new GenericError(400, "Class id is not valid."));
   }
 
+  const matchQuery = {
+    class: new mongoose.Types.ObjectId(classId),
+  };
+
+  if (req.query.disabled !== undefined) {
+    matchQuery.disabled = req.query.disabled === "true"; // or "false"
+  }
+
   const subjects = await Subject.aggregate([
     {
-      $match: {
-        class: new mongoose.Types.ObjectId(classId),
-      },
+      $match: matchQuery,
     },
     {
       $lookup: {
@@ -310,11 +321,30 @@ const getSubjectByClassId = handleAsync(async (req, res) => {
     .json(new GenericReponse(200, "Subjects fetched successfully", subjects));
 });
 
+const tooggleSubjectById = handleAsync(async (req, res) => {
+  const { id } = req.params;
+  if (!mongoose.isValidObjectId(id)) {
+    return res
+      .status(400)
+      .json(new GenericError(400, "Subject id is not valid."));
+  }
+  const subject = await Subject.findById(id);
+  if (!subject) {
+    return res.status(404).json(new GenericError(404, "Subject not found"));
+  }
+  subject.disabled = !subject.disabled;
+  await subject.save();
+  return res
+    .status(200)
+    .json(new GenericReponse(200, "Subject updated successfully", subject));
+});
+
 export {
   addSubject,
   deleteSubjectById,
   getSubjectByClassId,
   getSubjectById,
   getSubjects,
+  tooggleSubjectById,
   updateSubjectById,
 };
