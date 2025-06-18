@@ -1056,7 +1056,7 @@ const generateLedger = handleAsync(async (req, res) => {
       bookType: "xlsx",
       type: "buffer",
     });
-    const pathUrl = await uplaodOnBucket(fileBuffer);
+    const pathUrl = await uplaodOnBucket(fileBuffer, true);
     res.status(200).json(new GenericReponse(200, "Ledger", pathUrl));
   } catch (error) {
     res

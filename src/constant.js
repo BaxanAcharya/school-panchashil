@@ -21,3 +21,5 @@ export const BILL_FEE_LIST = [
   "Diary",
   "Identity Card",
 ];
+
+export const UPGRADE_CLASS = "UPGRADE_CLASS";

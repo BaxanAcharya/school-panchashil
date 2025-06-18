@@ -7,7 +7,9 @@ import {
   getStudentById,
   getStudents,
   makeStudentLeave,
+  makeStudentUnLeave,
   updateStudentById,
+  upgradeStudentClass,
 } from "../controllers/student.controller.js";
 import { verifyJWT } from "../middleware/auth.middleware.js";
 import { upload } from "../utils/bucket.js";
@@ -20,5 +22,9 @@ router.route("/:id").delete(verifyJWT, deleteStudentById);
 router.route("/:id").put(verifyJWT, upload.single("image"), updateStudentById);
 router.route("/:id").get(verifyJWT, getStudentById);
 router.route("/leave/:id").put(verifyJWT, makeStudentLeave);
+router.route("/unleave/:id").put(verifyJWT, makeStudentUnLeave);
 router.route("/class/:classId").get(verifyJWT, getStudentByClass);
+router
+  .route("/upgrade-class/:fromClassId/:toClassId")
+  .put(verifyJWT, upgradeStudentClass);
 export default router;
