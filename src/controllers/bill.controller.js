@@ -884,7 +884,7 @@ const bulkPrintBill = handleAsync(async (req, res) => {
       return `
         <div class="container">
           <img
-            src="https://panchashil.s3.amazonaws.com/logo/logo-rectangle.png"
+            src="https://raw.githubusercontent.com/BaxanAcharya/panchashil-next-school-mgmt/refs/heads/main/public/logo.png?token=GHSAT0AAAAAAC4UJ7CISHV7QGLPEIPBXH562CSXTAA"
             width="100%"
             height="100px"
             style="object-fit: contain"
