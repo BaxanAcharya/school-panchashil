@@ -271,10 +271,14 @@ const getSubjectByClassId = handleAsync(async (req, res) => {
     class: new mongoose.Types.ObjectId(classId),
   };
 
-  if (req.query.disabled !== undefined) {
-    matchQuery.disabled = req.query.disabled === "true"; // or "false"
-  }
-
+ if (req.query.disabled === "false") {
+  matchQuery.$or = [
+    { disabled: false },
+    { disabled: { $exists: false } },
+  ];
+} else if (req.query.disabled === "true") {
+  matchQuery.disabled = true;
+}
   const subjects = await Subject.aggregate([
     {
       $match: matchQuery,
