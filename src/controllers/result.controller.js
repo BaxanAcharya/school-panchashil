@@ -18,6 +18,7 @@ import {
   validMarks,
   validStudent,
 } from "../validation/mark.validation.js";
+import { CIRCLE_LOGO, RECT_LOGO } from "../constant.js";
 
 const getString = (result) => {
   let rows = "";
@@ -494,7 +495,7 @@ const printBulkMarkSheet = handleAsync(async (req, res) => {
     .map((result) => {
       return ` <div class="container">
         <img
-          src="https://panchashil.s3.amazonaws.com/logo/logo-rectangle.png"
+          src="${RECT_LOGO}"
           width="100%"
           height="100px"
           style="object-fit: contain"
@@ -552,7 +553,7 @@ const printBulkMarkSheet = handleAsync(async (req, res) => {
           </table>
           <div>
             <img
-              src="https://panchashil.s3.amazonaws.com/logo/logo-circel.png"
+              src="${CIRCLE_LOGO}"
               height="150px"
               width="150px"
               style="object-fit: contain; margin-left: 100px"
@@ -851,7 +852,7 @@ const printMarkSheet = handleAsync(async (req, res) => {
     <body>
       <div class="container">
         <img
-          src="https://panchashil.s3.amazonaws.com/logo/logo-rectangle.png"
+          src="${RECT_LOGO}"
           width="100%"
           height="100px"
           style="object-fit: contain"
@@ -909,7 +910,7 @@ const printMarkSheet = handleAsync(async (req, res) => {
           </table>
           <div>
             <img
-              src="https://panchashil.s3.amazonaws.com/logo/logo-circel.png"
+              src="${CIRCLE_LOGO}"
               height="150px"
               width="150px"
               style="object-fit: contain; margin-left: 100px"

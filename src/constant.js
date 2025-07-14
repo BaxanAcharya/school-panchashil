@@ -23,3 +23,6 @@ export const BILL_FEE_LIST = [
 ];
 
 export const UPGRADE_CLASS = "UPGRADE_CLASS";
+
+export const RECT_LOGO="https://res.cloudinary.com/dccgpxrdl/image/upload/v1750249285/logo/s7fsbotow1oreykpnemy.png"
+export const CIRCLE_LOGO="https://res.cloudinary.com/dccgpxrdl/image/upload/v1752465556/logo/circle-logo_cfzqwt.png";

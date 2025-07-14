@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { BILL_FEE_LIST } from "../constant.js";
+import { BILL_FEE_LIST, RECT_LOGO } from "../constant.js";
 import Bill from "../models/bill.model.js";
 import billFeeModel from "../models/billFee.model.js";
 import { Fee } from "../models/fee.model.js";
@@ -884,7 +884,7 @@ const bulkPrintBill = handleAsync(async (req, res) => {
       return `
         <div class="container">
           <img
-            src="https://res.cloudinary.com/dccgpxrdl/image/upload/v1750249285/logo/s7fsbotow1oreykpnemy.png"
+            src="${RECT_LOGO}"
             width="100%"
             height="100px"
             style="object-fit: contain"
@@ -1197,7 +1197,7 @@ const printBill = handleAsync(async (req, res) => {
     <body>
       <div class="container">
         <img
-          src="https://panchashil.s3.amazonaws.com/logo/logo-rectangle.png"
+          src="${RECT_LOGO}"
           width="100%"
           height="100px"
           style="object-fit: contain"
