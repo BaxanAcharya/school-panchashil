@@ -19,6 +19,7 @@ const addSalarySheet = handleAsync(async (req, res) => {
     kidFee,
     advance,
     oldDue,
+    allowance,
     totalWorkingDays,
   } = req.body;
   if (!staffId) {
@@ -55,6 +56,9 @@ const addSalarySheet = handleAsync(async (req, res) => {
   if (typeof oldDue !== "number") {
     return res.status(400).json(new GenericError(400, "Old due is required"));
   }
+  if (typeof allowance !== "number") {
+    return res.status(400).json(new GenericError(400, "Allowance is required"));
+  }
   if (typeof totalWorkingDays !== "number") {
     return res
       .status(400)
@@ -89,13 +93,14 @@ const addSalarySheet = handleAsync(async (req, res) => {
 
   switch (absentDays) {
     case 0:
-      salaryCalculated = salary + oneDaySalary;
+      salaryCalculated = salary + oneDaySalary + allowance;
       break;
     case 1:
-      salaryCalculated = salary;
+      salaryCalculated = salary + allowance;
       break;
     default:
-      salaryCalculated = salary + oneDaySalary - oneDaySalary * absentDays;
+      salaryCalculated =
+        salary + oneDaySalary - oneDaySalary * absentDays + allowance;
       break;
   }
 
@@ -112,6 +117,7 @@ const addSalarySheet = handleAsync(async (req, res) => {
     tax,
     advance,
     oldDue,
+    allowance,
     receivedAmount,
   });
 
@@ -207,14 +213,17 @@ const addSalarySheetBulk = handleAsync(async (req, res) => {
 
     switch (item.absentDays) {
       case 0:
-        salaryCalculated = salary + oneDaySalary;
+        salaryCalculated = salary + oneDaySalary + item.allowance;
         break;
       case 1:
-        salaryCalculated = salary;
+        salaryCalculated = salary + item.allowance;
         break;
       default:
         salaryCalculated =
-          salary + oneDaySalary - oneDaySalary * item.absentDays;
+          salary +
+          oneDaySalary -
+          oneDaySalary * item.absentDays +
+          item.allowance;
         break;
     }
 
@@ -231,6 +240,7 @@ const addSalarySheetBulk = handleAsync(async (req, res) => {
       tax,
       advance: item.advance,
       oldDue: item.oldDue,
+      allowance: item.allowance,
       receivedAmount,
     });
   });
@@ -260,7 +270,7 @@ const getSalarySheets = handleAsync(async (req, res) => {
       },
       {
         $lookup: {
-          from: "staffs", // Assuming the collection name for Staff is 'staffs'
+          from: "staffs",
           localField: "staff",
           foreignField: "_id",
           as: "staffDetails",
@@ -303,6 +313,7 @@ const getSalarySheets = handleAsync(async (req, res) => {
           oldDue: 1,
           absentDays: 1,
           receivedAmount: 1,
+          allowance: 1,
           createdAt: 1,
         },
       },
@@ -355,6 +366,7 @@ const updateSalarySheet = handleAsync(async (req, res) => {
     kidFee,
     advance,
     oldDue,
+    allowance,
     totalWorkingDays,
   } = req.body;
   if (!staffId) {
@@ -391,6 +403,9 @@ const updateSalarySheet = handleAsync(async (req, res) => {
   if (typeof oldDue !== "number") {
     return res.status(400).json(new GenericError(400, "Old due is required"));
   }
+  if (typeof allowance !== "number") {
+    return res.status(400).json(new GenericError(400, "Allowance is required"));
+  }
   if (typeof totalWorkingDays !== "number") {
     return res
       .status(400)
@@ -409,13 +424,14 @@ const updateSalarySheet = handleAsync(async (req, res) => {
 
   switch (absentDays) {
     case 0:
-      salaryCalculated = salary + oneDaySalary;
+      salaryCalculated = salary + oneDaySalary + allowance;
       break;
     case 1:
-      salaryCalculated = salary;
+      salaryCalculated = salary + allowance;
       break;
     default:
-      salaryCalculated = salary + oneDaySalary - oneDaySalary * absentDays;
+      salaryCalculated =
+        salary + oneDaySalary - oneDaySalary * absentDays + allowance;
       break;
   }
   const tax = (salaryCalculated * staff.taxPercentage) / 100;
@@ -432,6 +448,7 @@ const updateSalarySheet = handleAsync(async (req, res) => {
       tax,
       advance,
       oldDue,
+      allowance,
       receivedAmount,
     },
     { new: true }
