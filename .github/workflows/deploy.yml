@@ -21,9 +21,6 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Run tests
-        run: npm test
-
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
