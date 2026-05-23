@@ -43,7 +43,7 @@ app.use(express.static("public"));
 app.use(cookieParser());
 
 app.get("/", (_, res) => {
-  res.send("It is working fine");
+  res.send("It is working fine !!!");
 });
 app.use(`${API_PREFIX}/admin`, adminRouter);
 app.use(`${API_PREFIX}/class`, classRouter);
