@@ -40,6 +40,10 @@ const salarySheetSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    allowance: {
+      type: Number,
+      default: 0,
+    },
     receivedAmount: {
       type: Number,
       default: 0,

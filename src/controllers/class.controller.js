@@ -14,10 +14,10 @@ const addClass = handleAsync(async (req, res) => {
     return res.status(400).json(new GenericError(400, nameValidation));
   }
 
-  const sectionValidation = validateSection(section);
-  if (sectionValidation) {
-    return res.status(400).json(new GenericError(400, sectionValidation));
-  }
+  // const sectionValidation = validateSection(section);
+  // if (sectionValidation) {
+  //   return res.status(400).json(new GenericError(400, sectionValidation));
+  // }
 
   const exists = await Class.findOne({
     name,
@@ -65,10 +65,10 @@ const updateClass = handleAsync(async (req, res) => {
     return res.status(400).json(new GenericError(400, nameValidation));
   }
 
-  const sectionValidation = validateSection(section);
-  if (sectionValidation) {
-    return res.status(400).json(new GenericError(400, sectionValidation));
-  }
+  // const sectionValidation = validateSection(section);
+  // if (sectionValidation) {
+  //   return res.status(400).json(new GenericError(400, sectionValidation));
+  // }
 
   const exists = await Class.findOne({
     name,
