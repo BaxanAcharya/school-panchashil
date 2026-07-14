@@ -17,6 +17,11 @@ const examSchema = new mongoose.Schema(
       required: false,
       trim: true,
     },
+
+    incomplete: {
+      type: Boolean,
+      default: true,
+    },
   },
   { timestamps: true }
 );

@@ -127,9 +127,44 @@ const deleteExam = handleAsync(async (req, res) => {
     .json(new GenericReponse(200, "Exam deleted successfully", {}));
 });
 
+const toggleExamIncomplete = handleAsync(async (req, res) => {
+  const { id } = req.params;
+  const isValidId = mongoose.isValidObjectId(id);
+  if (!isValidId) {
+    return res.status(400).json(new GenericError(400, "Invalid id"));
+  }
+
+  const status = req.body.status;
+
+  if (typeof status !== "boolean") {
+    return res
+      .status(400)
+      .json(new GenericError(400, "Status must be a boolean value"));
+  }
+
+  const exam = await Exam.findById(id);
+  if (!exam) {
+    return res
+      .status(404)
+      .json(new GenericError(404, `Exam with id ${id} not found`));
+  }
+  exam.incomplete = status;
+  await exam.save();
+  return res
+    .status(200)
+    .json(
+      new GenericReponse(
+        200,
+        `Exam incomplete status toggled to ${exam.incomplete}`,
+        {}
+      )
+    );
+});
+
 export {
   addExam,
   deleteExam,
+  toggleExamIncomplete,
   getExamById,
   getExamByYear,
   getExams,

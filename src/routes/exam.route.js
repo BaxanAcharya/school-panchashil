@@ -5,6 +5,7 @@ import {
   getExamById,
   getExamByYear,
   getExams,
+  toggleExamIncomplete,
   updateExam,
 } from "../controllers/exam.controller.js";
 import { verifyJWT } from "../middleware/auth.middleware.js";
@@ -16,5 +17,6 @@ router.route("/:id").get(verifyJWT, getExamById);
 router.route("/year/:year").get(verifyJWT, getExamByYear);
 router.route("/:id").put(verifyJWT, updateExam);
 router.route("/:id").delete(verifyJWT, deleteExam);
+router.route("/complete/:id").put(verifyJWT, toggleExamIncomplete);
 
 export default router;
